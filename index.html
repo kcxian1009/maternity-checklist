@@ -1169,13 +1169,21 @@ function MaternityChecklist() {
                         {si.purchased ? <CheckCircle2 className="w-6 h-6" style={{color: colors.accent}} /> : <Circle className="w-6 h-6 text-gray-400" />}
                       </button>
                       {editingShoppingId === si.id ? (
-                        <div className="flex-1 flex gap-2">
-                          <input type="text" value={editingShoppingName} onChange={(e) => setEditingShoppingName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEditShopping(si.id); }} style={{borderColor: colors.accent, color: colors.text}} className="flex-1 px-2 py-1 border rounded text-sm font-semibold focus:outline-none" autoFocus />
-                          <button onClick={() => saveEditShopping(si.id)} style={{backgroundColor: colors.accent}} className="px-2 py-1 text-white rounded text-sm">✓</button>
-                          <button onClick={() => setEditingShoppingId(null)} className="px-2 py-1 bg-gray-300 rounded text-sm">✕</button>
+                        <div className="flex-1">
+                          <div className="flex gap-2">
+                            <input type="text" value={editingShoppingName} onChange={(e) => setEditingShoppingName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEditShopping(si.id); }} style={{borderColor: colors.accent, color: colors.text}} className="flex-1 px-2 py-1 border rounded text-sm font-semibold focus:outline-none" autoFocus />
+                            <button onClick={() => saveEditShopping(si.id)} style={{backgroundColor: colors.accent}} className="px-2 py-1 text-white rounded text-sm">✓</button>
+                            <button onClick={() => setEditingShoppingId(null)} className="px-2 py-1 bg-gray-300 rounded text-sm">✕</button>
+                          </div>
+                          <input type="url" value={si.link || ''} onChange={(e) => saveShoppingList(shoppingList.map(i => i.id === si.id ? { ...i, link: e.target.value } : i))} placeholder="貼上商品連結 (http://...)" style={{borderColor: colors.accent}} className="w-full px-2 py-1 border rounded text-sm mt-2" />
                         </div>
                       ) : (
-                        <span style={{color: si.purchased ? '#a0aec0' : colors.text, textDecoration: si.purchased ? 'line-through' : 'none'}} className="flex-1 font-semibold">{si.name}</span>
+                        <div className="flex-1 flex items-center gap-2">
+                          <span style={{color: si.purchased ? '#a0aec0' : colors.text, textDecoration: si.purchased ? 'line-through' : 'none'}} className="font-semibold">{si.name}</span>
+                          {si.link && (
+                            <a href={si.link} target="_blank" rel="noopener noreferrer" style={{color: colors.accent}} className="text-xs hover:opacity-75">🔗</a>
+                          )}
+                        </div>
                       )}
                       <button onClick={() => startEditShopping(si.id, si.name)} className="p-2 hover:bg-gray-100 rounded"><Edit2 className="w-4 h-4" style={{color: colors.accent}} /></button>
                       {deleteShoppingConfirmId === si.id ? (
