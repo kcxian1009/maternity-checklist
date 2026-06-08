@@ -681,7 +681,7 @@ function MaternityChecklist() {
   const toggleShoppingPurchased = (id) => saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, purchased: !i.purchased } : i));
   const startEditShopping = (id, name) => { setEditingShoppingId(id); setEditingShoppingName(name); };
   const saveEditShopping = (id) => { saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, name: editingShoppingName } : i)); setEditingShoppingId(null); };
-  const addShoppingPrice = (id, price, shop, date) => saveShoppingList((shoppingList || []).map(i => i.id === id ? { ...i, prices: [...(i.prices || []), { price: parseInt(price), shop, date }] } : i));
+  const addShoppingPrice = (id, price, shop, date, link='') => saveShoppingList((shoppingList || []).map(i => i.id === id ? { ...i, prices: [...(i.prices || []), { price: parseInt(price), shop, date, link: link || '' }] } : i));
   const removeShoppingPrice = (itemId, idx) => saveShoppingList((shoppingList || []).map(i => i.id === itemId ? { ...i, prices: (i.prices || []).filter((_, j) => j !== idx) } : i));
 
   // ====== 匯出/匯入 ======
