@@ -676,7 +676,7 @@ function MaternityChecklist() {
     database.ref(`sessions/${sessionId}/shoppingList`).set(list);
     localStorage.setItem('shopping-list', JSON.stringify(list));
   };
-  const addShoppingItem = () => { if (!newShoppingItem.trim()) return; saveShoppingList([...(shoppingList || []), { id: Date.now().toString(), name: newShoppingItem, purchased: false, prices: [] }]); setNewShoppingItem(''); };
+  const addShoppingItem = () => { if (!newShoppingItem.trim()) return; saveShoppingList([...(shoppingList || []), { id: Date.now().toString(), name: newShoppingItem, purchased: false, prices: [], link: '' }]); setNewShoppingItem(''); };
   const removeShoppingItem = (id) => saveShoppingList(shoppingList.filter(i => i.id !== id));
   const toggleShoppingPurchased = (id) => saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, purchased: !i.purchased } : i));
   const startEditShopping = (id, name) => { setEditingShoppingId(id); setEditingShoppingName(name); };
