@@ -549,7 +549,14 @@ function MaternityChecklist() {
     shoppingRef.on('value', (snapshot) => {
       if (snapshot.exists()) {
         const val = snapshot.val();
-        setShoppingList(Array.isArray(val) ? val : []);
+        if (Array.isArray(val)) {
+          // 確保每個 item 都有 prices 陣列
+          setShoppingList(val.map(item => ({ ...item, prices: Array.isArray(item.prices) ? item.prices : [] })));
+        } else {
+          setShoppingList([]);
+        }
+      } else {
+        setShoppingList([]);
       }
     });
 
@@ -669,13 +676,13 @@ function MaternityChecklist() {
     database.ref(`sessions/${sessionId}/shoppingList`).set(list);
     localStorage.setItem('shopping-list', JSON.stringify(list));
   };
-  const addShoppingItem = () => { if (!newShoppingItem.trim()) return; saveShoppingList([...shoppingList, { id: Date.now().toString(), name: newShoppingItem, purchased: false, prices: [] }]); setNewShoppingItem(''); };
+  const addShoppingItem = () => { if (!newShoppingItem.trim()) return; saveShoppingList([...(shoppingList || []), { id: Date.now().toString(), name: newShoppingItem, purchased: false, prices: [] }]); setNewShoppingItem(''); };
   const removeShoppingItem = (id) => saveShoppingList(shoppingList.filter(i => i.id !== id));
   const toggleShoppingPurchased = (id) => saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, purchased: !i.purchased } : i));
   const startEditShopping = (id, name) => { setEditingShoppingId(id); setEditingShoppingName(name); };
   const saveEditShopping = (id) => { saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, name: editingShoppingName } : i)); setEditingShoppingId(null); };
-  const addShoppingPrice = (id, price, shop, date) => saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, prices: [...i.prices, { price: parseInt(price), shop, date }] } : i));
-  const removeShoppingPrice = (itemId, idx) => saveShoppingList(shoppingList.map(i => i.id === itemId ? { ...i, prices: i.prices.filter((_, j) => j !== idx) } : i));
+  const addShoppingPrice = (id, price, shop, date) => saveShoppingList((shoppingList || []).map(i => i.id === id ? { ...i, prices: [...(i.prices || []), { price: parseInt(price), shop, date }] } : i));
+  const removeShoppingPrice = (itemId, idx) => saveShoppingList((shoppingList || []).map(i => i.id === itemId ? { ...i, prices: (i.prices || []).filter((_, j) => j !== idx) } : i));
 
   // ====== 匯出/匯入 ======
   const exportData = () => {
@@ -1147,7 +1154,7 @@ function MaternityChecklist() {
               </div>
             </div>
 
-            {shoppingList.length === 0 ? (
+            {(shoppingList || []).length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" style={{color: colors.accent}} />
                 <p style={{color: colors.text}} className="text-lg">購物清單是空的</p>
@@ -1155,7 +1162,7 @@ function MaternityChecklist() {
               </div>
             ) : (
               <div className="space-y-3">
-                {shoppingList.map((si) => (
+                {(shoppingList || []).map((si) => (
                   <div key={si.id} style={{backgroundColor: si.purchased ? '#f0f7ff' : 'white', borderColor: si.purchased ? colors.accent : '#e2e8f0', borderWidth: '2px'}} className="p-4 rounded-lg transition-all">
                     <div className="flex items-center gap-3 mb-2">
                       <button onClick={() => toggleShoppingPurchased(si.id)} className="flex-shrink-0 transition-all hover:scale-110">
@@ -1181,10 +1188,10 @@ function MaternityChecklist() {
                       )}
                     </div>
 
-                    {si.prices.length > 0 && (
+                    {(si.prices || []).length > 0 && (
                       <div style={{backgroundColor: '#f0f7ff', borderTop: `2px solid ${colors.accent}`}} className="p-2 rounded mb-2">
                         <p style={{color: colors.dark}} className="text-sm font-semibold mb-1">💰 比價：</p>
-                        {si.prices.map((p, idx) => (
+                        {(si.prices || []).map((p, idx) => (
                           <div key={idx} className="flex items-center justify-between text-sm bg-white p-1 rounded mb-1">
                             <span>${p.price} @ {p.shop} ({p.date})</span>
                             <button onClick={() => removeShoppingPrice(si.id, idx)} className="p-1 hover:bg-red-100 rounded"><X className="w-3 h-3 text-red-500" /></button>
