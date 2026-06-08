@@ -1,0 +1,25 @@
+{
+  "name": "待產包清單",
+  "short_name": "待產包",
+  "description": "孕期待產包和月中準備清單，可與家人實時共享",
+  "start_url": "/maternity-checklist/",
+  "scope": "/maternity-checklist/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#faf8f3",
+  "theme_color": "#f0c8b7",
+  "icons": [
+    {
+      "src": "/maternity-checklist/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/maternity-checklist/icon-192.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
