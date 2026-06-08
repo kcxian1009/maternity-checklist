@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#f0c8b7">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,6 +15,14 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #faf8f3; }
         #root { width: 100%; min-height: 100vh; }
+        input, textarea { font-size: 16px !important; }
+        input:focus, textarea:focus { font-size: 16px !important; }
+        input[type="text"], input[type="number"], input[type="url"], textarea {
+          -webkit-appearance: none;
+          -webkit-border-radius: 4px;
+          appearance: none;
+          border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -1018,14 +1026,14 @@ function MaternityChecklist() {
 
           {/* Tabs - 兩排 */}
           <div className="flex gap-2 mb-1">
-            <button onClick={() => setActiveTab('delivery')} style={{backgroundColor: activeTab === 'delivery' ? colors.primary : 'white', color: activeTab === 'delivery' ? 'white' : colors.text, borderBottom: activeTab === 'delivery' ? 'none' : `2px solid ${colors.primary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">待產包</button>
-            <button onClick={() => setActiveTab('confinement')} style={{backgroundColor: activeTab === 'confinement' ? colors.primary : 'white', color: activeTab === 'confinement' ? 'white' : colors.text, borderBottom: activeTab === 'confinement' ? 'none' : `2px solid ${colors.primary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">月中準備</button>
+            <button onClick={() => (window.scrollTo(0, 0), setActiveTab('delivery'))} style={{backgroundColor: activeTab === 'delivery' ? colors.primary : 'white', color: activeTab === 'delivery' ? 'white' : colors.text, borderBottom: activeTab === 'delivery' ? 'none' : `2px solid ${colors.primary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">待產包</button>
+            <button onClick={() => (window.scrollTo(0, 0), setActiveTab('confinement'))} style={{backgroundColor: activeTab === 'confinement' ? colors.primary : 'white', color: activeTab === 'confinement' ? 'white' : colors.text, borderBottom: activeTab === 'confinement' ? 'none' : `2px solid ${colors.primary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">月中準備</button>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setActiveTab('toBuy')} style={{backgroundColor: activeTab === 'toBuy' ? colors.secondary : 'white', color: activeTab === 'toBuy' ? 'white' : colors.text, borderBottom: activeTab === 'toBuy' ? 'none' : `2px solid ${colors.secondary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-1">
+            <button onClick={() => (window.scrollTo(0, 0), setActiveTab('toBuy'))} style={{backgroundColor: activeTab === 'toBuy' ? colors.secondary : 'white', color: activeTab === 'toBuy' ? 'white' : colors.text, borderBottom: activeTab === 'toBuy' ? 'none' : `2px solid ${colors.secondary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-1">
               <ShoppingCart className="w-4 h-4" />待買{toBuyCount > 0 ? `(${toBuyCount})` : ''}
             </button>
-            <button onClick={() => setActiveTab('shopping')} style={{backgroundColor: activeTab === 'shopping' ? colors.accent : 'white', color: activeTab === 'shopping' ? 'white' : colors.text, borderBottom: activeTab === 'shopping' ? 'none' : `2px solid ${colors.accent}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">
+            <button onClick={() => (window.scrollTo(0, 0), setActiveTab('shopping'))} style={{backgroundColor: activeTab === 'shopping' ? colors.accent : 'white', color: activeTab === 'shopping' ? 'white' : colors.text, borderBottom: activeTab === 'shopping' ? 'none' : `2px solid ${colors.accent}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">
               🛍️ 購物{shoppingList.length > 0 ? `(${shoppingList.length})` : ''}
             </button>
           </div>
