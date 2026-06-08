@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f0c8b7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="待產包">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <title>待產包清單</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #faf8f3; }
+        #root { width: 100%; min-height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- App -->
+    <script type="text/babel">
+const { useState, useEffect } = React;
+
+// ===== 自定義 SVG 圖標組件 =====
+const CheckCircle2 = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('path',{d:'M22 11.08V12a10 10 0 1 1-5.93-9.14'}), React.createElement('polyline',{points:'22 4 12 14.01 9 11.01'}));
+
+const Circle = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('circle',{cx:'12', cy:'12', r:'10'}));
+
+const ShoppingCart = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('circle',{cx:'9', cy:'21', r:'1'}), React.createElement('circle',{cx:'20', cy:'21', r:'1'}), React.createElement('path',{d:'M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'}));
+
+const ChevronDown = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('polyline',{points:'6 9 12 15 18 9'}));
+
+const ChevronUp = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('polyline',{points:'18 15 12 9 6 15'}));
+
+const RotateCcw = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('polyline',{points:'1 4 1 10 7 10'}), React.createElement('path',{d:'M3.51 15a9 9 0 1 0 .49-3.5'}));
+
+const Edit2 = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('path',{d:'M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'}));
+
+const X = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('line',{x1:'18', y1:'6', x2:'6', y2:'18'}), React.createElement('line',{x1:'6', y1:'6', x2:'18', y2:'18'}));
+
+const Tag = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('path',{d:'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'}), React.createElement('line',{x1:'7', y1:'7', x2:'7.01', y2:'7'}));
+
+const Package = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('line',{x1:'16.5', y1:'9.4', x2:'7.5', y2:'4.21'}), React.createElement('path',{d:'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'}), React.createElement('polyline',{points:'3.27 6.96 12 12.01 20.73 6.96'}), React.createElement('line',{x1:'12', y1:'22.08', x2:'12', y2:'12'}));
+
+const Plus = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('line',{x1:'12', y1:'5', x2:'12', y2:'19'}), React.createElement('line',{x1:'5', y1:'12', x2:'19', y2:'12'}));
+
+const Download = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('path',{d:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'}), React.createElement('polyline',{points:'7 10 12 15 17 10'}), React.createElement('line',{x1:'12', y1:'15', x2:'12', y2:'3'}));
+
+const Upload = ({className='', style={}}) => React.createElement('svg', {xmlns:'http://www.w3.org/2000/svg', width:'24', height:'24', viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:'2', strokeLinecap:'round', strokeLinejoin:'round', className, style}, React.createElement('path',{d:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'}), React.createElement('polyline',{points:'17 8 12 3 7 8'}), React.createElement('line',{x1:'12', y1:'3', x2:'12', y2:'15'}));
+
+
+// Firebase compat 初始化
+firebase.initializeApp({
+  apiKey: "AIzaSyA85RtRzWWGTg51Ky4SW-0UQaEq5kRJgrQ",
+  authDomain: "maternity-checklist.firebaseapp.com",
+  databaseURL: "https://maternity-checklist-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "maternity-checklist",
+  storageBucket: "maternity-checklist.firebasestorage.app",
+  messagingSenderId: "211617306579",
+  appId: "1:211617306579:web:22646769d744cde25dc126"
+});
+const database = firebase.database();
+
+function MaternityChecklist() {
+  // ===== 浪漫糖果色配色 =====
+  const colors = {
+    primary: '#f0c8b7',      // 淡粉 - 待產包
+    secondary: '#efcba9',    // 奶油橘 - 待買
+    accent: '#dacbcd',       // 淡紫粉 - 購物清單
+    dark: '#dc958b',         // 粉紅 - 深色 accent
+    text: '#4a4a4a',         // 深灰文字
+    textMute: '#8b7355'      // 奶咖色文字
+  };
+
+  // ====== State ======
+  const [activeTab, setActiveTab] = useState('delivery');
+  const [checklist, setChecklist] = useState({});
+  const [expandedSections, setExpandedSections] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editingItemName, setEditingItemName] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [editingPrice, setEditingPrice] = useState(null);
+  const [editingPriceIndex, setEditingPriceIndex] = useState(null);
+  const [editingPriceData, setEditingPriceData] = useState(null);
+  const [priceFormData, setPriceFormData] = useState({ shop: '', price: '', link: '' });
+  const [editingSectionNote, setEditingSectionNote] = useState(null);
+  const [sectionNoteText, setSectionNoteText] = useState('');
+  const [addingCategory, setAddingCategory] = useState(null);
+  const [newItemName, setNewItemName] = useState('');
+  const [shoppingList, setShoppingList] = useState([]);
+  const [newShoppingItem, setNewShoppingItem] = useState('');
+  const [editingShoppingId, setEditingShoppingId] = useState(null);
+  const [editingShoppingName, setEditingShoppingName] = useState('');
+  const [deleteShoppingConfirmId, setDeleteShoppingConfirmId] = useState(null);
+  const [editingToBuyPriceId, setEditingToBuyPriceId] = useState(null);
+  const [sessionId] = useState('maternity-shared-list');
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deletedItems, setDeletedItems] = useState(new Set());
+
+  // ====== 資料定義 ======
+  const deliveryData = {
+    '住院證件檢查': ['夫妻雙方身分證', '健保卡', '媽媽手冊'],
+    '媽媽生產衣物': ['哺乳用內衣3套', '兩件式衣物（有衣、褲）', '拖鞋（離開醫院就丟）', '出院穿的外衣、襪子、鞋子'],
+    '媽媽清潔用品': ['產褥墊2包', '私密處沖洗器', '免洗內褲10件', '靠得住晚安好眠褲20包、衛生棉夜用41cm20入', '浴巾', '濕紙巾1盒、衛生紙1大包', '洗臉巾', '洗面乳', '牙刷', '牙膏', '酒精'],
+    '哺乳用品': ['擠乳器+新購買配件', '母乳袋2盒', '溢乳墊2盒', '初乳收集瓶'],
+    '寶寶用品': ['屁屁膏1條', '配方奶（雀巢能量水解1小罐）', '出院服（帽子、小手套、襪子、包巾、紗布衣）', '汽座（先裝好）', '推車（放後車廂）', '奶瓶清潔劑+刷子', '奶嘴2個', '新生兒尿布NB一袋', '嬰兒乳液+按摩油', '紗布浴巾薄一條'],
+    '其他': ['充電器', '托腹帶', '產後束腹帶', '大人口罩一盒', '酒精、台塑生醫抗菌噴霧1瓶'],
+  };
+
+  const confinementData = {
+    '媽媽備物': ['香護墊（約護墊衣有贈送，避免感染污紅床墊）', '產褥墊=產後衛生棉', '貼身衣物', '日用及夜用衛生棉(惡露減少可使用一般衛生棉)', '束腹帶（自然產媽媽可自行決定，刨腹產必定備用）', '生理沖洗罐(簽約禮有贈送)', '手動/電動擠乳器（我們備有只點吸電動擠乳器免費借用，但配件費費媽媽自行購買）'],
+    '禁止攜帶': ['大浴中和毛巾', '哺乳衣褲', '個人盥洗用品', '吹風機', '月亮枕', '（禁止攜帶高耗電量電器用品）'],
+    '寶寶備物': ['電子體溫計', '護膚膏(屁屁膏、寶寶乳液)', '安撫奶嘴', '嬰兒衣物（紗布衣或包屁衣、包巾、帽子、手套）', '嬰兒安全座椅'],
+    '寶寶無需準備': ['尿布', '護理巾', '寶寶衣服', '沐浴乳', '奶瓶', '配方奶（亞培、能思水解、能思全營、S-26、欧朋水解、欧朋一般）'],
+  };
+
+  const initialChecklistData = {
+    "delivery-住院證件檢查-0": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 1,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-住院證件檢查-1": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 1,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-住院證件檢查-2": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 1,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽生產衣物-0": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 3,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽生產衣物-1": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽生產衣物-2": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 1,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽生產衣物-3": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-0": {
+        "status": "have",
+        "quantity": 0,
+        "currentQuantity": 2,
+        "note": "只有兩片",
+        "itemName": "",
+        "prices": [
+            {
+                "price": 187,
+                "shop": "丁丁藥局六甲村",
+                "date": "2026/6/7"
+            }
+        ]
+    },
+    "delivery-媽媽清潔用品-1": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 2,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-2": {
+        "status": "toBuy",
+        "quantity": 8,
+        "currentQuantity": 2,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-3": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 40,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-4": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 1,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-5": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 2,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-6": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-7": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-8": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-9": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-媽媽清潔用品-10": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-哺乳用品-0": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "配件(只能配備)",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-哺乳用品-1": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 5,
+        "note": "5入",
+        "itemName": "",
+        "prices": [
+            {
+                "price": 219,
+                "shop": "丁丁藥局-小獅王150ml",
+                "date": "2026/6/7"
+            },
+            {
+                "price": 135,
+                "shop": "丁丁藥局6甲村20入",
+                "date": "2026/6/7"
+            }
+        ]
+    },
+    "delivery-哺乳用品-2": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 26,
+        "note": "26片一定要買",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-哺乳用品-3": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 2,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-0": {
+        "status": "toBuy",
+        "quantity": 1,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-1": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-2": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-3": {
+        "status": "have",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "已放後車廂",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-4": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 1,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-5": {
+        "status": "have",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "只有試用包50ml，有8瓶刷",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-6": {
+        "status": "done",
+        "quantity": 1,
+        "currentQuantity": 6,
+        "note": "缺香草奶嘴",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-7": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 4,
+        "note": "剛竄給2入+要磨送2入",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-8": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 2,
+        "note": "慕之恬廊2試用瓶與薇涵液",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-寶寶用品-9": {
+        "status": "done",
+        "quantity": 0,
+        "currentQuantity": 2,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-其他-0": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-其他-1": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-其他-2": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-其他-3": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    },
+    "delivery-其他-4": {
+        "status": "pending",
+        "quantity": 0,
+        "currentQuantity": 0,
+        "note": "",
+        "itemName": "",
+        "prices": []
+    }
+};
+
+  // ====== 工具函數 ======
+  const getItemId = (section, index, tab) => `${tab || activeTab}-${section}-${index}`;
+  const getItemData = (id) => {
+    const d = checklist[id];
+    if (!d) return { status: 'pending', note: '', itemName: '', quantity: 0, currentQuantity: 0, prices: [] };
+    return { ...d, prices: Array.isArray(d.prices) ? d.prices : [] };
+  };
+  const setItemData = (id, data) => { setChecklist(prev => ({ ...prev, [id]: { ...getItemData(id), ...data } })); };
+  const getSectionNoteId = (section) => `${activeTab}-${section}-NOTE`;
+  const getSectionNote = (section) => checklist[getSectionNoteId(section)] || '';
+  const setSectionNote = (section, note) => { setChecklist(prev => ({ ...prev, [getSectionNoteId(section)]: note })); };
+  const allData = activeTab === 'delivery' ? deliveryData : activeTab === 'confinement' ? confinementData : null;
+
+  const calcToBuyCount = () => {
+    let count = 0;
+    [deliveryData, confinementData].forEach((data, i) => {
+      const tab = i === 0 ? 'delivery' : 'confinement';
+      Object.entries(data).forEach(([section, items]) => {
+        items.forEach((_, index) => {
+          const id = `${tab}-${section}-${index}`;
+          if ((checklist[id] || {}).status === 'toBuy' && !deletedItems.has(id)) count++;
+        });
+      });
+    });
+    return count;
+  };
+  const toBuyCount = calcToBuyCount();
+
+  let totalItems = 0, checkedItems = 0;
+  if (allData) {
+    Object.entries(allData).forEach(([section, items]) => {
+      items.forEach((_, index) => {
+        const id = getItemId(section, index);
+        if (deletedItems.has(id)) return;
+        totalItems++;
+        if (getItemData(id).status === 'done') checkedItems++;
+      });
+    });
+  }
+
+  // ====== URL 轉換函數 ======
+  const parseUrlsInText = (text) => {
+    if (!text) return '';
+    // 正則表達式匹配 HTTP(S) URL
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, idx) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a key={idx} href={part} target="_blank" rel="noopener noreferrer" style={{color: colors.secondary, textDecoration: 'underline', fontWeight: 'bold'}} className="hover:opacity-75">
+            🔗 {part.replace(/^https?:\/\//, '').substring(0, 40)}...
+          </a>
+        );
+      }
+      return <span key={idx}>{part}</span>;
+    });
+  };
+  // ====== useEffect ======
+  useEffect(() => {
+    const allSections = {};
+    Object.keys(deliveryData).forEach(s => allSections[s] = true);
+    Object.keys(confinementData).forEach(s => allSections[s] = true);
+    setExpandedSections(allSections);
+    
+    // 從 Firebase 載入數據
+    setIsSyncing(true);
+    
+    const checklistRef = database.ref(`sessions/${sessionId}/checklist`);
+    const deletedRef = database.ref(`sessions/${sessionId}/deletedItems`);
+    const shoppingRef = database.ref(`sessions/${sessionId}/shoppingList`);
+    
+    checklistRef.on('value', (snapshot) => {
+      if (snapshot.exists()) {
+        setChecklist(snapshot.val());
+      } else {
+        setChecklist(initialChecklistData);
+        checklistRef.set(initialChecklistData);
+      }
+      setIsSyncing(false);
+    }, (error) => {
+      console.error('Firebase 載入錯誤:', error);
+      const saved = localStorage.getItem('maternity-checklist');
+      if (saved) {
+        try { setChecklist(JSON.parse(saved)); } catch(e) { setChecklist(initialChecklistData); }
+      } else {
+        setChecklist(initialChecklistData);
+      }
+      setIsSyncing(false);
+    });
+    
+    deletedRef.on('value', (snapshot) => {
+      if (snapshot.exists() && Array.isArray(snapshot.val())) {
+        setDeletedItems(new Set(snapshot.val()));
+      }
+    });
+    
+    shoppingRef.on('value', (snapshot) => {
+      if (snapshot.exists()) {
+        const val = snapshot.val();
+        setShoppingList(Array.isArray(val) ? val : []);
+      }
+    });
+
+    // ✅ 清理 Firebase 監聽，防止記憶體洩漏
+    return () => {
+      checklistRef.off();
+      deletedRef.off();
+      shoppingRef.off();
+    };
+  }, [sessionId]);
+
+  // 購物清單在上面的 Firebase useEffect 中已載入
+
+  useEffect(() => {
+    if (Object.keys(checklist).length > 0) {
+      database.ref(`sessions/${sessionId}/checklist`).set(checklist);
+      localStorage.setItem('maternity-checklist', JSON.stringify(checklist));
+    }
+  }, [checklist, sessionId]);
+
+  useEffect(() => {
+    if (!allData) return;
+    const newExp = { ...expandedSections };
+    Object.entries(allData).forEach(([section, items]) => {
+      if (items.length > 0 && items.every((_, i) => getItemData(getItemId(section, i)).status === 'done')) {
+        newExp[section] = false;
+      }
+    });
+    setExpandedSections(newExp);
+  }, [checklist, activeTab]);
+
+  // ====== 操作函數 ======
+  const cycleStatus = (id) => {
+    const s = getItemData(id).status;
+    const next = s === 'pending' ? 'have' : s === 'have' ? 'toBuy' : s === 'toBuy' ? 'done' : 'pending';
+    setItemData(id, { status: next });
+  };
+
+  const toggleSection = (section) => setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  const startEdit = (id, note, name) => { setEditingId(id); setEditNote(note || ''); setEditingItemName(name || ''); };
+  const saveNote = (id) => { setItemData(id, { note: editNote, itemName: editingItemName }); setEditingId(null); };
+  const updateQuantity = (id, field, value) => setItemData(id, { [field]: parseInt(value) || 0 });
+
+  const addPrice = (id) => {
+    if (!priceFormData.shop || !priceFormData.price) return;
+    const data = getItemData(id);
+    setItemData(id, { prices: [...data.prices, { shop: priceFormData.shop, price: priceFormData.price, date: new Date().toLocaleDateString('zh-TW'), link: priceFormData.link || '' }] });
+    setPriceFormData({ shop: '', price: '', link: '' });
+  };
+
+  const removePrice = (id, index) => { const d = getItemData(id); setItemData(id, { prices: d.prices.filter((_, i) => i !== index) }); };
+
+  const editPrice = (id, index) => {
+    const item = checklist[id];
+    if (item?.prices?.[index]) { setEditingPrice(id); setEditingPriceIndex(index); setEditingPriceData({ ...item.prices[index], link: item.prices[index].link || '' }); }
+  };
+
+  const saveEditPrice = (id) => {
+    if (editingPriceData && editingPriceIndex !== null) {
+      const newPrices = [...(checklist[id]?.prices || [])];
+      newPrices[editingPriceIndex] = editingPriceData;
+      setItemData(id, { prices: newPrices });
+      setEditingPrice(null); setEditingPriceIndex(null); setEditingPriceData(null);
+    }
+  };
+
+  const addNewItem = (category) => {
+    if (!newItemName.trim()) return;
+    // ✅ 用時間戳避免 ID 衝突
+    const newId = `${activeTab}-${category}-custom-${Date.now()}`;
+    setChecklist(prev => ({ ...prev, [newId]: { status: 'pending', quantity: 0, currentQuantity: 0, note: '', itemName: newItemName, prices: [] } }));
+    setNewItemName(''); setAddingCategory(null);
+  };
+
+  const deleteItem = (id) => {
+    const newDeleted = new Set(deletedItems);
+    newDeleted.add(id);
+    setDeletedItems(newDeleted);
+    // 同步保存到 Firebase
+    database.ref(`sessions/${sessionId}/deletedItems`).set([...newDeleted]);
+    // 也清除 checklist 中的數據
+    const newChecklist = { ...checklist };
+    delete newChecklist[id];
+    setChecklist(newChecklist);
+    setDeleteConfirmId(null);
+  };
+
+  const resetAll = () => {
+    if (confirm('確定要清除待產包和月中準備的所有進度嗎？（購物清單不會被清除）')) {
+      database.ref(`sessions/${sessionId}/checklist`).set({});
+      database.ref(`sessions/${sessionId}/deletedItems`).set([]);
+      setChecklist({});
+      setDeletedItems(new Set());
+    }
+  };
+
+  const getToBuyItems = () => {
+    const items = [];
+    [deliveryData, confinementData].forEach((data, i) => {
+      const tab = i === 0 ? 'delivery' : 'confinement';
+      Object.entries(data).forEach(([section, itemList]) => {
+        itemList.forEach((item, index) => {
+          const fullId = `${tab}-${section}-${index}`;
+          const d = getItemData(fullId);
+          if (d.status === 'toBuy' && !deletedItems.has(fullId)) {
+            items.push({ id: fullId, section, item: d.itemName || item, note: d.note, tab, quantity: d.quantity || 0, currentQuantity: d.currentQuantity || 0, needQuantity: Math.max(0, (d.quantity || 0) - (d.currentQuantity || 0)), prices: d.prices || [] });
+          }
+        });
+      });
+    });
+    return items;
+  };
+
+  // ====== 購物清單函數 ======
+  const saveShoppingList = (list) => { 
+    setShoppingList(list); 
+    database.ref(`sessions/${sessionId}/shoppingList`).set(list);
+    localStorage.setItem('shopping-list', JSON.stringify(list));
+  };
+  const addShoppingItem = () => { if (!newShoppingItem.trim()) return; saveShoppingList([...shoppingList, { id: Date.now().toString(), name: newShoppingItem, purchased: false, prices: [] }]); setNewShoppingItem(''); };
+  const removeShoppingItem = (id) => saveShoppingList(shoppingList.filter(i => i.id !== id));
+  const toggleShoppingPurchased = (id) => saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, purchased: !i.purchased } : i));
+  const startEditShopping = (id, name) => { setEditingShoppingId(id); setEditingShoppingName(name); };
+  const saveEditShopping = (id) => { saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, name: editingShoppingName } : i)); setEditingShoppingId(null); };
+  const addShoppingPrice = (id, price, shop, date) => saveShoppingList(shoppingList.map(i => i.id === id ? { ...i, prices: [...i.prices, { price: parseInt(price), shop, date }] } : i));
+  const removeShoppingPrice = (itemId, idx) => saveShoppingList(shoppingList.map(i => i.id === itemId ? { ...i, prices: i.prices.filter((_, j) => j !== idx) } : i));
+
+  // ====== 匯出/匯入 ======
+  const exportData = () => {
+    const data = JSON.stringify({ checklist, shoppingList, deletedItems: [...deletedItems], version: 3 }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `待產包備份_${new Date().toLocaleDateString('zh-TW').replace(/\//g, '-')}.json`;
+    a.click();
+  };
+
+  const importData = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.checklist) { 
+            setChecklist(data.checklist); 
+            database.ref(`sessions/${sessionId}/checklist`).set(data.checklist);
+          }
+          if (data.shoppingList) { 
+            setShoppingList(data.shoppingList); 
+            database.ref(`sessions/${sessionId}/shoppingList`).set(data.shoppingList);
+          }
+          if (data.deletedItems) { 
+            const d = new Set(data.deletedItems); 
+            setDeletedItems(d); 
+            database.ref(`sessions/${sessionId}/deletedItems`).set(data.deletedItems);
+          }
+          alert('匯入成功！');
+        } catch { alert('檔案格式錯誤'); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  // ====== 渲染：品項卡片 ======
+  const renderItem = (item, index, section) => {
+    const id = getItemId(section, index);
+    const d = getItemData(id);
+    const isEditing = editingId === id;
+    const showQty = d.status === 'done' || d.status === 'have' || d.status === 'toBuy';
+
+    return (
+      <div key={id} className="rounded-lg transition-all overflow-hidden">
+        <div style={{backgroundColor: d.status === 'done' ? '#f0c8b7' : d.status === 'have' ? '#f9e8e3' : d.status === 'toBuy' ? '#fffaf0' : '#fff9f7', borderLeft: `4px solid ${d.status === 'done' ? colors.primary : d.status === 'have' ? '#a0aec0' : d.status === 'toBuy' ? colors.secondary : '#e2e8f0'}`}} className="flex items-start gap-3 p-3">
+          <button onClick={() => cycleStatus(id)} className="mt-1 flex-shrink-0 p-2 rounded-full hover:bg-gray-100 active:scale-95 transition-all" title="點擊切換狀態">
+            {d.status === 'done' && <CheckCircle2 className="w-7 h-7" style={{color: colors.primary}} />}
+            {d.status === 'have' && <Package className="w-7 h-7 text-blue-400" />}
+            {d.status === 'toBuy' && <ShoppingCart className="w-7 h-7" style={{color: colors.secondary}} />}
+            {d.status === 'pending' && <Circle className="w-7 h-7 text-gray-300" />}
+          </button>
+          <div className="flex-1">
+            <div style={{color: d.status === 'done' ? colors.dark : colors.text, textDecoration: d.status === 'done' ? 'line-through' : 'none'}} className="font-semibold">{d.itemName || item}</div>
+            {d.note && <div style={{color: colors.textMute}} className="text-sm mt-1 italic">💬 {d.note}</div>}
+          </div>
+          <button onClick={() => startEdit(id, d.note, d.itemName || item)} className="p-2 hover:bg-gray-100 rounded-lg" title="編輯">
+            <Edit2 className="w-4 h-4" style={{color: colors.primary}} />
+          </button>
+          {deleteConfirmId === id ? (
+            <div className="flex gap-1 flex-shrink-0">
+              <button onClick={() => deleteItem(id)} style={{backgroundColor: '#dc2626'}} className="px-3 py-1 text-white text-xs rounded font-bold">刪</button>
+              <button onClick={() => setDeleteConfirmId(null)} className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded font-bold">X</button>
+            </div>
+          ) : (
+            <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(id); }} className="flex-shrink-0 p-2 hover:bg-red-100 rounded-lg transition-colors" title="點擊刪除" style={{cursor: 'pointer'}}>
+              <X className="w-5 h-5 text-red-500" />
+            </button>
+          )}
+        </div>
+
+        {showQty && (
+          <div className="bg-white border-t border-gray-200 px-3 py-2 flex gap-4 text-sm flex-wrap">
+            {(d.status === 'toBuy' || d.status === 'done') && (
+              <div className="flex items-center gap-2">
+                <label style={{color: colors.textMute}} className="font-semibold whitespace-nowrap">需要數量：</label>
+                <input type="text" inputMode="numeric" value={d.quantity} onChange={(e) => updateQuantity(id, 'quantity', e.target.value.replace(/\D/g, '') || '0')} style={{borderColor: colors.secondary}} className="w-16 px-2 py-1 border rounded text-base focus:outline-none" />
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <label style={{color: colors.textMute}} className="font-semibold whitespace-nowrap">已有數量：</label>
+              <input type="text" inputMode="numeric" value={d.currentQuantity} onChange={(e) => updateQuantity(id, 'currentQuantity', e.target.value.replace(/\D/g, '') || '0')} style={{borderColor: colors.primary}} className="w-16 px-2 py-1 border rounded text-base focus:outline-none" />
+            </div>
+            {d.status === 'toBuy' && d.quantity > 0 && (
+              <div className="flex items-center gap-2">
+                <span style={{color: colors.textMute}} className="font-semibold">待補：</span>
+                <span className="font-bold" style={{color: colors.dark}}>{Math.max(0, d.quantity - d.currentQuantity)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {d.status === 'toBuy' && editingPrice === id && (
+          <div style={{backgroundColor: '#fffaf0', borderTop: `2px solid ${colors.secondary}`}} className="p-3">
+            <div className="flex items-center gap-2 mb-2 text-sm font-semibold" style={{color: colors.dark}}><Tag className="w-4 h-4" />比價信息</div>
+            {d.prices.length > 0 && (
+              <div className="mb-2 space-y-1">
+                {d.prices.map((p, pIdx) => (
+                  <div key={pIdx} className="flex items-center justify-between bg-white p-2 rounded-lg text-sm gap-2">
+                    <div className="flex-1">
+                      <span className="font-semibold">${p.price}</span>
+                      <span style={{color: colors.textMute}} className="ml-2">@ {p.shop || p.location}</span>
+                      <span className="text-gray-400 ml-2">({p.date})</span>
+                      {p.link && (
+                        <div className="mt-1">
+                          <a href={p.link} target="_blank" rel="noopener noreferrer" style={{color: colors.secondary, textDecoration: 'underline'}} className="text-xs hover:opacity-75">
+                            🔗 查看商品
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button onClick={() => editPrice(id, pIdx)} className="p-1 hover:bg-gray-100 rounded"><Edit2 className="w-4 h-4" style={{color: colors.primary}} /></button>
+                      <button onClick={() => removePrice(id, pIdx)} className="p-1 hover:bg-red-100 rounded"><X className="w-4 h-4 text-red-500" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {editingPriceIndex !== null ? (
+              <div style={{backgroundColor: '#f0f7ff', borderColor: colors.primary}} className="border rounded-lg p-3 mb-2 space-y-2">
+                <p style={{color: colors.text}} className="text-sm font-semibold">編輯價格</p>
+                <input type="number" value={editingPriceData?.price || ''} onChange={(e) => setEditingPriceData({ ...editingPriceData, price: parseInt(e.target.value) || 0 })} placeholder="價格" className="w-full px-2 py-1 border rounded text-sm" />
+                <input type="text" value={editingPriceData?.shop || ''} onChange={(e) => setEditingPriceData({ ...editingPriceData, shop: e.target.value })} placeholder="店鋪" className="w-full px-2 py-1 border rounded text-sm" />
+                <input type="text" value={editingPriceData?.date || ''} onChange={(e) => setEditingPriceData({ ...editingPriceData, date: e.target.value })} placeholder="日期" className="w-full px-2 py-1 border rounded text-sm" />
+                <input type="url" value={editingPriceData?.link || ''} onChange={(e) => setEditingPriceData({ ...editingPriceData, link: e.target.value })} placeholder="商品連結 (http://...)" className="w-full px-2 py-1 border rounded text-sm" />
+                <div className="flex gap-2">
+                  <button onClick={() => saveEditPrice(id)} style={{backgroundColor: colors.primary}} className="flex-1 text-white px-3 py-1 rounded text-sm font-semibold">✓ 保存</button>
+                  <button onClick={() => { setEditingPrice(null); setEditingPriceIndex(null); setEditingPriceData(null); }} className="flex-1 bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">✕ 取消</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input type="text" placeholder="店鋪名稱" value={priceFormData.shop} onChange={(e) => setPriceFormData({ ...priceFormData, shop: e.target.value })} style={{borderColor: colors.secondary}} className="flex-1 px-2 py-1 border rounded text-sm focus:outline-none" />
+                  <input type="number" placeholder="價格" value={priceFormData.price} onChange={(e) => setPriceFormData({ ...priceFormData, price: e.target.value })} className="w-20 px-2 py-1 border rounded text-sm" />
+                </div>
+                <input type="url" placeholder="商品連結 (http://...)" value={priceFormData.link} onChange={(e) => setPriceFormData({ ...priceFormData, link: e.target.value })} style={{borderColor: colors.secondary}} className="w-full px-2 py-1 border rounded text-sm focus:outline-none" />
+                <div className="flex gap-2">
+                  <button onClick={() => { addPrice(id); setEditingPrice(null); }} style={{backgroundColor: colors.secondary}} className="flex-1 px-3 py-1 text-white rounded text-sm font-semibold">加入</button>
+                  <button onClick={() => setEditingPrice(null)} className="px-3 py-1 bg-gray-200 rounded text-sm">取消</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {d.status === 'toBuy' && editingPrice !== id && (
+          <div className="bg-white border-t border-gray-200 px-3 py-2">
+            {d.prices.length > 0 ? (
+              <div className="space-y-1 mb-2">
+                {d.prices.map((p, pIdx) => (
+                  <div key={pIdx} className="flex items-center justify-between text-sm">
+                    <span style={{color: colors.text}}>💰 <span className="font-semibold">${p.price}</span> @ <span style={{color: colors.dark}}>{p.shop}</span> ({p.date})</span>
+                    <button onClick={() => editPrice(id, pIdx)} className="p-1 hover:bg-gray-100 rounded"><Edit2 className="w-3 h-3" style={{color: colors.primary}} /></button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            <button onClick={() => setEditingPrice(id)} style={{color: colors.dark, borderColor: colors.secondary}} className="w-full px-2 py-1 border border-dashed rounded text-sm hover:bg-gray-50">+ 比價資訊</button>
+          </div>
+        )}
+
+        {isEditing && (
+          <div style={{backgroundColor: '#f0c8b7', borderTop: `2px solid ${colors.primary}`}} className="p-3 space-y-2">
+            <input type="text" value={editingItemName} onChange={(e) => setEditingItemName(e.target.value)} placeholder="編輯品項名稱..." style={{borderColor: colors.primary, color: colors.text}} className="w-full px-3 py-2 border rounded-lg font-semibold focus:outline-none" autoFocus />
+            <div className="flex gap-2">
+              <input type="text" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="輸入備註..." style={{borderColor: colors.primary}} className="flex-1 px-3 py-2 border rounded-lg focus:outline-none" />
+              <button onClick={() => saveNote(id)} style={{backgroundColor: colors.primary}} className="px-3 py-2 text-white rounded-lg font-semibold">保存</button>
+              <button onClick={() => setEditingId(null)} className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg"><X className="w-4 h-4" /></button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ====== 渲染：待買清單卡片（可編輯比價） ======
+  const renderToBuyCard = ({ id, item, note, quantity, currentQuantity, needQuantity, prices }) => (
+    <div key={id} style={{backgroundColor: '#fffaf0', borderColor: colors.secondary}} className="p-3 border rounded-lg">
+      <div className="flex items-start gap-3 mb-2">
+        <ShoppingCart className="w-5 h-5 flex-shrink-0 mt-0.5" style={{color: colors.secondary}} />
+        <div className="flex-1">
+          {editingId === id ? (
+            <div className="space-y-2">
+              <input type="text" value={editingItemName} onChange={(e) => setEditingItemName(e.target.value)} style={{borderColor: colors.secondary, color: colors.text}} className="w-full px-2 py-1 border rounded text-sm font-semibold focus:outline-none" autoFocus />
+              <input type="text" value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="備註..." style={{borderColor: colors.secondary}} className="w-full px-2 py-1 border rounded text-sm focus:outline-none" />
+              <div className="flex gap-2">
+                <button onClick={() => saveNote(id)} style={{backgroundColor: colors.secondary}} className="px-3 py-1 text-white rounded text-sm font-semibold">保存</button>
+                <button onClick={() => setEditingId(null)} className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm">取消</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p style={{color: colors.text}} className="font-semibold">{item}</p>
+              {note && <p style={{color: colors.textMute}} className="text-sm mt-1 italic">💬 {note}</p>}
+            </>
+          )}
+        </div>
+        {editingId !== id && (
+          <button onClick={() => startEdit(id, note, item)} className="p-2 hover:bg-gray-100 rounded-lg" title="編輯名稱備註">
+            <Edit2 className="w-4 h-4" style={{color: colors.secondary}} />
+          </button>
+        )}
+      </div>
+
+      <div style={{backgroundColor: '#fff8f0', borderColor: colors.secondary}} className="p-2 rounded text-sm mb-2 flex gap-4 border flex-wrap">
+        <div className="flex items-center gap-1">
+          <span style={{color: colors.textMute}}>需要：</span>
+          <input type="text" inputMode="numeric" value={quantity} onChange={(e) => updateQuantity(id, 'quantity', e.target.value.replace(/\D/g, '') || '0')} style={{borderColor: colors.secondary}} className="w-12 px-1 py-0.5 border rounded text-sm text-center font-bold focus:outline-none" />
+        </div>
+        <div className="flex items-center gap-1">
+          <span style={{color: colors.textMute}}>已有：</span>
+          <input type="text" inputMode="numeric" value={currentQuantity} onChange={(e) => updateQuantity(id, 'currentQuantity', e.target.value.replace(/\D/g, '') || '0')} style={{borderColor: colors.secondary}} className="w-12 px-1 py-0.5 border rounded text-sm text-center font-bold focus:outline-none" />
+        </div>
+        <div><span style={{color: colors.textMute}}>待補：</span><span style={{color: colors.dark}} className="font-bold">{needQuantity}</span></div>
+      </div>
+
+      {/* 比價區塊 - 按需顯示 */}
+      {editingToBuyPriceId === id ? (
+        <div style={{borderTop: `2px solid ${colors.secondary}`}} className="pt-2">
+          <p style={{color: colors.dark}} className="text-sm font-semibold mb-1">💰 比價：</p>
+          {prices.length > 0 && (
+            <div className="space-y-1 mb-2">
+              {(prices || []).map((p, idx) => (
+                <div key={idx} className="flex items-center justify-between bg-white p-2 rounded text-sm">
+                  <span style={{color: colors.text}}>
+                    <span className="font-bold">${p.price}</span> @ <span style={{color: colors.dark}}>{p.shop || p.location}</span> <span className="text-gray-400">({p.date})</span>
+                  </span>
+                  <div className="flex gap-1">
+                    <button onClick={() => editPrice(id, idx)} className="p-1 hover:bg-gray-100 rounded"><Edit2 className="w-3 h-3" style={{color: colors.secondary}} /></button>
+                    <button onClick={() => removePrice(id, idx)} className="p-1 hover:bg-red-100 rounded"><X className="w-3 h-3 text-red-500" /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {editingPrice === id && editingPriceIndex !== null ? (
+            <div style={{backgroundColor: '#fff8f0', borderColor: colors.secondary}} className="border rounded p-2 mb-2 space-y-1">
+              <input type="number" value={editingPriceData?.price || ''} onChange={(e) => setEditingPriceData({ ...editingPriceData, price: parseInt(e.target.value) || 0 })} placeholder="價格" className="w-full px-2 py-1 border rounded text-sm" />
+              <input type="text" value={editingPriceData?.shop || ''} onChange={(e) => setEditingPriceData({ ...editingPriceData, shop: e.target.value })} placeholder="店鋪" className="w-full px-2 py-1 border rounded text-sm" />
+              <input type="url" value={editingPriceData?.link || ''} onChange={(e) => setEditingPriceData({ ...editingPriceData, link: e.target.value })} placeholder="商品連結 (http://...)" className="w-full px-2 py-1 border rounded text-sm" />
+              <div className="flex gap-2">
+                <button onClick={() => saveEditPrice(id)} style={{backgroundColor: colors.secondary}} className="flex-1 text-white px-2 py-1 rounded text-sm font-semibold">✓ 保存</button>
+                <button onClick={() => { setEditingPrice(null); setEditingPriceIndex(null); setEditingPriceData(null); }} className="flex-1 bg-gray-300 text-gray-700 px-2 py-1 rounded text-sm">✕ 取消</button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <input type="text" placeholder="店鋪" id={`tb-shop-${id}`} style={{borderColor: colors.secondary}} className="flex-1 px-2 py-1 border rounded text-sm" />
+                <input type="number" placeholder="價格" id={`tb-price-${id}`} style={{borderColor: colors.secondary}} className="w-20 px-2 py-1 border rounded text-sm" />
+              </div>
+              <input type="url" placeholder="商品連結 (http://...)" id={`tb-link-${id}`} style={{borderColor: colors.secondary}} className="w-full px-2 py-1 border rounded text-sm" />
+              <button onClick={() => {
+                const shop = document.getElementById(`tb-shop-${id}`).value;
+                const price = document.getElementById(`tb-price-${id}`).value;
+                const link = document.getElementById(`tb-link-${id}`).value;
+                if (shop && price) {
+                  const d = getItemData(id);
+                  setItemData(id, { prices: [...d.prices, { shop, price: parseInt(price), date: new Date().toLocaleDateString('zh-TW'), link: link || '' }] });
+                  document.getElementById(`tb-shop-${id}`).value = '';
+                  document.getElementById(`tb-price-${id}`).value = '';
+                  document.getElementById(`tb-link-${id}`).value = '';
+                }
+              }} style={{backgroundColor: colors.secondary}} className="w-full px-3 py-1 text-white rounded text-sm font-semibold">+ 比價</button>
+            </div>
+          )}
+          <button onClick={() => setEditingToBuyPriceId(null)} style={{color: colors.dark, borderColor: colors.secondary}} className="w-full mt-2 px-2 py-1 border border-dashed rounded text-sm hover:bg-gray-50">關閉</button>
+        </div>
+      ) : (
+        <div className="border-t border-gray-200 pt-2">
+          {(prices || []).length > 0 ? (
+            <div className="space-y-1 mb-2">
+              {(prices || []).map((p, idx) => (
+                <div key={idx} className="flex items-center justify-between text-sm">
+                  <span style={{color: colors.text}}>💰 <span className="font-semibold">${p.price}</span> @ <span style={{color: colors.dark}}>{p.shop}</span> ({p.date})</span>
+                  <button onClick={() => { editPrice(id, idx); setEditingToBuyPriceId(id); }} className="p-1 hover:bg-gray-100 rounded"><Edit2 className="w-3 h-3" style={{color: colors.secondary}} /></button>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <button onClick={() => setEditingToBuyPriceId(id)} style={{color: colors.dark, borderColor: colors.secondary}} className="w-full px-2 py-1 border border-dashed rounded text-sm hover:bg-gray-50">+ 比價資訊</button>
+        </div>
+      )}
+    </div>
+  );
+
+  // ====== JSX 主體 ======
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: "#faf8f3" }}>
+      {/* Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-gray-200 shadow-sm">
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <h1 style={{color: colors.dark}} className="text-2xl font-bold mb-2">
+            {activeTab === 'delivery' && '待產包清單'}
+            {activeTab === 'confinement' && '月中準備清單'}
+            {activeTab === 'toBuy' && '🛒 待買清單'}
+            {activeTab === 'shopping' && '🛍️ 購物清單'}
+          </h1>
+
+          {(activeTab === 'delivery' || activeTab === 'confinement') && (
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div className="h-full transition-all duration-500" style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.dark})`, width: `${totalItems > 0 ? (checkedItems / totalItems) * 100 : 0}%` }} />
+              </div>
+              <span style={{color: colors.dark}} className="text-sm font-semibold">{checkedItems}/{totalItems}</span>
+            </div>
+          )}
+
+          {/* Tabs - 兩排 */}
+          <div className="flex gap-2 mb-1">
+            <button onClick={() => setActiveTab('delivery')} style={{backgroundColor: activeTab === 'delivery' ? colors.primary : 'white', color: activeTab === 'delivery' ? 'white' : colors.text, borderBottom: activeTab === 'delivery' ? 'none' : `2px solid ${colors.primary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">待產包</button>
+            <button onClick={() => setActiveTab('confinement')} style={{backgroundColor: activeTab === 'confinement' ? colors.primary : 'white', color: activeTab === 'confinement' ? 'white' : colors.text, borderBottom: activeTab === 'confinement' ? 'none' : `2px solid ${colors.primary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">月中準備</button>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setActiveTab('toBuy')} style={{backgroundColor: activeTab === 'toBuy' ? colors.secondary : 'white', color: activeTab === 'toBuy' ? 'white' : colors.text, borderBottom: activeTab === 'toBuy' ? 'none' : `2px solid ${colors.secondary}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-1">
+              <ShoppingCart className="w-4 h-4" />待買{toBuyCount > 0 ? `(${toBuyCount})` : ''}
+            </button>
+            <button onClick={() => setActiveTab('shopping')} style={{backgroundColor: activeTab === 'shopping' ? colors.accent : 'white', color: activeTab === 'shopping' ? 'white' : colors.text, borderBottom: activeTab === 'shopping' ? 'none' : `2px solid ${colors.accent}`}} className="flex-1 py-2 rounded-lg font-semibold text-sm transition-all">
+              🛍️ 購物{shoppingList.length > 0 ? `(${shoppingList.length})` : ''}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-3xl mx-auto px-4 py-6">
+
+        {/* ===== 待產包 / 月中準備 ===== */}
+        {(activeTab === 'delivery' || activeTab === 'confinement') && allData ? (
+          <>
+            <div style={{backgroundColor: '#f0c8b7', borderColor: colors.primary}} className="mb-4 p-3 border rounded-lg text-sm" style={{color: colors.text}}>
+              💡 <span className="font-semibold">使用提示：</span>點擊圓圈循環切換狀態<br/>⭕ 未準備 → 📦 已有 → 🛒 待買 → ✅ 已準備
+            </div>
+
+            {Object.entries(allData).map(([section, items]) => (
+              <div key={section} className="mb-4">
+                <button onClick={() => toggleSection(section)} style={{backgroundColor: 'white', borderColor: colors.primary, color: colors.dark}} className="w-full flex items-center justify-between p-4 rounded-lg border shadow-sm hover:border-opacity-100">
+                  <h2 className="text-lg font-bold">{section}</h2>
+                  <div className="flex items-center gap-2">
+                    <span style={{color: colors.dark}} className="text-sm font-semibold">
+                      {(() => { let done=0, have=0, buy=0, total=0; items.forEach((_,i) => { const id=getItemId(section,i); if(deletedItems.has(id))return; total++; const s=getItemData(id).status; if(s==='done')done++; if(s==='have')have++; if(s==='toBuy')buy++; }); let r=`${done}/${total}`; if(have>0)r+=` (已${have})`; if(buy>0)r+=` (待${buy})`; return r; })()}
+                    </span>
+                    {expandedSections[section] ? <ChevronUp className="w-5 h-5" style={{color: colors.primary}} /> : <ChevronDown className="w-5 h-5" style={{color: colors.primary}} />}
+                  </div>
+                </button>
+
+                {expandedSections[section] && (
+                  <div className="mt-2 space-y-2">
+                    {items.map((item, index) => {
+                      const itemId = getItemId(section, index);
+                      if (deletedItems.has(itemId)) return null;
+                      return renderItem(item, index, section);
+                    })}
+                    {/* 渲染用戶自行新增的品項 */}
+                    {Object.entries(checklist).filter(([id]) =>
+                      id.startsWith(`${activeTab}-${section}-custom-`) && !deletedItems.has(id)
+                    ).map(([id, d]) => (
+                      <div key={id} className="rounded-lg transition-all overflow-hidden">
+                        <div style={{backgroundColor: d.status === 'done' ? '#f0c8b7' : d.status === 'have' ? '#f9e8e3' : d.status === 'toBuy' ? '#fffaf0' : '#fff9f7', borderLeft: `4px solid ${d.status === 'done' ? colors.primary : d.status === 'have' ? '#a0aec0' : d.status === 'toBuy' ? colors.secondary : '#e2e8f0'}`}} className="flex items-start gap-3 p-3">
+                          <button onClick={() => cycleStatus(id)} className="mt-1 flex-shrink-0 p-2 rounded-full hover:bg-gray-100 active:scale-95 transition-all">
+                            {d.status === 'done' && React.createElement(CheckCircle2, {className:'w-7 h-7', style:{color:colors.primary}})}
+                            {d.status === 'have' && React.createElement(Package, {className:'w-7 h-7 text-blue-400'})}
+                            {d.status === 'toBuy' && React.createElement(ShoppingCart, {className:'w-7 h-7', style:{color:colors.secondary}})}
+                            {d.status === 'pending' && React.createElement(Circle, {className:'w-7 h-7 text-gray-300'})}
+                          </button>
+                          <div className="flex-1">
+                            <div style={{color: d.status === 'done' ? colors.dark : colors.text, textDecoration: d.status === 'done' ? 'line-through' : 'none'}} className="font-semibold">{d.itemName || '新品項'}</div>
+                            {d.note && <div style={{color: colors.textMute}} className="text-sm mt-1 italic">💬 {d.note}</div>}
+                          </div>
+                          <button onClick={() => startEdit(id, d.note, d.itemName || '')} className="p-2 hover:bg-gray-100 rounded-lg">
+                            {React.createElement(Edit2, {className:'w-4 h-4', style:{color:colors.primary}})}
+                          </button>
+                          {deleteConfirmId === id ? (
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button onClick={() => deleteItem(id)} style={{backgroundColor:'#dc2626'}} className="px-3 py-1 text-white text-xs rounded font-bold">刪</button>
+                              <button onClick={() => setDeleteConfirmId(null)} className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded font-bold">取消</button>
+                            </div>
+                          ) : (
+                            <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(id); }} className="flex-shrink-0 p-2 hover:bg-red-100 rounded-lg" style={{cursor:'pointer'}}>
+                              {React.createElement(X, {className:'w-5 h-5 text-red-500'})}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {addingCategory === section ? (
+                      <div style={{backgroundColor: '#f0c8b7', borderColor: colors.primary}} className="border-2 border-dashed rounded-lg p-3 space-y-2">
+                        <input type="text" placeholder="輸入新品項名稱..." value={newItemName} onChange={(e) => setNewItemName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addNewItem(section); }} autoFocus style={{borderColor: colors.primary, color: colors.text}} className="w-full px-3 py-2 border rounded text-sm focus:outline-none" />
+                        <div className="flex gap-2">
+                          <button onClick={() => addNewItem(section)} style={{backgroundColor: colors.primary}} className="flex-1 text-white px-3 py-1 rounded text-sm font-semibold">✓ 新增</button>
+                          <button onClick={() => { setAddingCategory(null); setNewItemName(''); }} className="flex-1 bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">✕ 取消</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => setAddingCategory(section)} style={{borderColor: colors.primary, color: colors.dark}} className="w-full py-2 rounded-lg border-2 border-dashed hover:bg-gray-100 font-semibold flex items-center justify-center gap-2">
+                        <Plus className="w-5 h-5" />新增品項
+                      </button>
+                    )}
+
+                    {/* 分類備註 */}
+                    <div style={{backgroundColor: '#f0f7ff', borderColor: colors.accent}} className="mt-3 p-3 rounded-lg border">
+                      {editingSectionNote === section ? (
+                        <div className="space-y-2">
+                          <label style={{color: colors.text}} className="text-sm font-semibold">📝 分類備註：</label>
+                          <textarea value={sectionNoteText} onChange={(e) => setSectionNoteText(e.target.value)} placeholder="輸入備註..." style={{borderColor: colors.accent}} className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:outline-none" rows="3" />
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={() => { setSectionNote(section, sectionNoteText); setEditingSectionNote(null); }} style={{backgroundColor: colors.accent}} className="px-3 py-1 text-white rounded text-sm font-semibold">保存</button>
+                            <button onClick={() => setEditingSectionNote(null)} className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm">取消</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div onClick={() => { setEditingSectionNote(section); setSectionNoteText(getSectionNote(section)); }} className="cursor-pointer">
+                          {getSectionNote(section) ? (
+                            <><div style={{color: colors.text}} className="text-sm font-semibold mb-1">📝 分類備註：</div><p style={{color: colors.text}}className="text-sm">{getSectionNote(section)}</p></>
+                          ) : (
+                            <p style={{color: '#a0aec0'}} className="text-sm italic">📝 點擊新增分類備註...</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        ) : activeTab === 'toBuy' ? (
+          (() => {
+            const toBuyList = getToBuyItems();
+            if (toBuyList.length === 0) return (
+              <div className="text-center py-12">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" style={{color: colors.secondary}} />
+                <p style={{color: colors.text}} className="text-lg">還沒有待買的項目</p>
+                <p style={{color: colors.textMute}} className="text-sm mt-2">在清單中點擊項目的購物車圖標標記為待買</p>
+              </div>
+            );
+            const grouped = { delivery: [], confinement: [] };
+            toBuyList.forEach(i => grouped[i.tab].push(i));
+            return (
+              <div>
+                {grouped.delivery.length > 0 && (
+                  <div className="mb-6">
+                    <h3 style={{color: colors.dark}} className="text-lg font-bold mb-3 flex items-center gap-2"><span style={{backgroundColor: colors.primary}} className="px-3 py-1 text-white rounded-full text-sm">待產包</span>{grouped.delivery.length}項</h3>
+                    <div className="space-y-3">{grouped.delivery.map(renderToBuyCard)}</div>
+                  </div>
+                )}
+                {grouped.confinement.length > 0 && (
+                  <div>
+                    <h3 style={{color: colors.dark}} className="text-lg font-bold mb-3 flex items-center gap-2"><span style={{backgroundColor: colors.primary}} className="px-3 py-1 text-white rounded-full text-sm">月中準備</span>{grouped.confinement.length}項</h3>
+                    <div className="space-y-3">{grouped.confinement.map(renderToBuyCard)}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })()
+        ) : activeTab === 'shopping' ? (
+          <div className="space-y-4">
+            <div style={{backgroundColor: 'white', borderColor: colors.accent}} className="border-2 rounded-lg p-4">
+              <div className="flex gap-2">
+                <input type="text" value={newShoppingItem} onChange={(e) => setNewShoppingItem(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addShoppingItem(); }} placeholder="輸入購物項目..." style={{borderColor: colors.accent, color: colors.text}} className="flex-1 px-3 py-2 border rounded-lg focus:outline-none" />
+                <button onClick={addShoppingItem} style={{backgroundColor: colors.accent}} className="px-4 py-2 text-white rounded-lg hover:opacity-90 font-semibold">+ 新增</button>
+              </div>
+            </div>
+
+            {shoppingList.length === 0 ? (
+              <div className="text-center py-12">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-4 opacity-50" style={{color: colors.accent}} />
+                <p style={{color: colors.text}} className="text-lg">購物清單是空的</p>
+                <p style={{color: colors.textMute}} className="text-sm mt-2">新增你要購買的商品吧！</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {shoppingList.map((si) => (
+                  <div key={si.id} style={{backgroundColor: si.purchased ? '#f0f7ff' : 'white', borderColor: si.purchased ? colors.accent : '#e2e8f0', borderWidth: '2px'}} className="p-4 rounded-lg transition-all">
+                    <div className="flex items-center gap-3 mb-2">
+                      <button onClick={() => toggleShoppingPurchased(si.id)} className="flex-shrink-0 transition-all hover:scale-110">
+                        {si.purchased ? <CheckCircle2 className="w-6 h-6" style={{color: colors.accent}} /> : <Circle className="w-6 h-6 text-gray-400" />}
+                      </button>
+                      {editingShoppingId === si.id ? (
+                        <div className="flex-1 flex gap-2">
+                          <input type="text" value={editingShoppingName} onChange={(e) => setEditingShoppingName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEditShopping(si.id); }} style={{borderColor: colors.accent, color: colors.text}} className="flex-1 px-2 py-1 border rounded text-sm font-semibold focus:outline-none" autoFocus />
+                          <button onClick={() => saveEditShopping(si.id)} style={{backgroundColor: colors.accent}} className="px-2 py-1 text-white rounded text-sm">✓</button>
+                          <button onClick={() => setEditingShoppingId(null)} className="px-2 py-1 bg-gray-300 rounded text-sm">✕</button>
+                        </div>
+                      ) : (
+                        <span style={{color: si.purchased ? '#a0aec0' : colors.text, textDecoration: si.purchased ? 'line-through' : 'none'}} className="flex-1 font-semibold">{si.name}</span>
+                      )}
+                      <button onClick={() => startEditShopping(si.id, si.name)} className="p-2 hover:bg-gray-100 rounded"><Edit2 className="w-4 h-4" style={{color: colors.accent}} /></button>
+                      {deleteShoppingConfirmId === si.id ? (
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button onClick={() => { removeShoppingItem(si.id); setDeleteShoppingConfirmId(null); }} style={{backgroundColor: '#dc2626'}} className="px-3 py-1 text-white text-xs rounded font-bold">刪</button>
+                          <button onClick={() => setDeleteShoppingConfirmId(null)} className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded font-bold">取消</button>
+                        </div>
+                      ) : (
+                        <button onClick={(e) => { e.stopPropagation(); setDeleteShoppingConfirmId(si.id); }} className="p-2 hover:bg-red-100 rounded"><X className="w-4 h-4 text-red-500" /></button>
+                      )}
+                    </div>
+
+                    {si.prices.length > 0 && (
+                      <div style={{backgroundColor: '#f0f7ff', borderTop: `2px solid ${colors.accent}`}} className="p-2 rounded mb-2">
+                        <p style={{color: colors.dark}} className="text-sm font-semibold mb-1">💰 比價：</p>
+                        {si.prices.map((p, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm bg-white p-1 rounded mb-1">
+                            <span>${p.price} @ {p.shop} ({p.date})</span>
+                            <button onClick={() => removeShoppingPrice(si.id, idx)} className="p-1 hover:bg-red-100 rounded"><X className="w-3 h-3 text-red-500" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 text-sm">
+                      <input type="number" placeholder="價格" id={`sp-${si.id}`} style={{borderColor: colors.accent}} className="w-20 px-2 py-1 border rounded text-sm" />
+                      <input type="text" placeholder="店鋪" id={`ss-${si.id}`} style={{borderColor: colors.accent}} className="flex-1 px-2 py-1 border rounded text-sm" />
+                      <button onClick={() => {
+                        const p = document.getElementById(`sp-${si.id}`).value;
+                        const s = document.getElementById(`ss-${si.id}`).value;
+                        if (p && s) { addShoppingPrice(si.id, p, s, new Date().toLocaleDateString('zh-TW')); document.getElementById(`sp-${si.id}`).value = ''; document.getElementById(`ss-${si.id}`).value = ''; }
+                      }} style={{backgroundColor: colors.accent}} className="px-3 py-1 text-white rounded text-sm font-semibold">+ 比價</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Firebase 同步狀態 */}
+        {isSyncing && (
+          <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm">
+            <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+            同步中...
+          </div>
+        )}
+
+        {/* 底部按鈕 */}
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="flex gap-3">
+            <button onClick={exportData} style={{backgroundColor: 'white', color: colors.primary, borderColor: colors.primary}} className="flex items-center gap-2 px-4 py-2 border-2 rounded-lg hover:bg-gray-50 text-sm font-semibold">
+              <Download className="w-4 h-4" />匯出備份
+            </button>
+            <button onClick={importData} style={{backgroundColor: 'white', color: colors.primary, borderColor: colors.primary}} className="flex items-center gap-2 px-4 py-2 border-2 rounded-lg hover:bg-gray-50 text-sm font-semibold">
+              <Upload className="w-4 h-4" />匯入備份
+            </button>
+          </div>
+          {(activeTab === 'delivery' || activeTab === 'confinement') && (
+            <button onClick={resetAll} style={{backgroundColor: 'white', color: colors.primary, borderColor: colors.primary}} className="flex items-center gap-2 px-6 py-3 border-2 rounded-lg hover:bg-gray-50 font-semibold">
+              <RotateCcw className="w-4 h-4" />清除所有進度
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// 掛載應用
+const rootElement = document.getElementById('root');
+const root = ReactDOM.createRoot(rootElement);
+root.render(React.createElement(MaternityChecklist));
+
+    </script>
+</body>
+</html>
