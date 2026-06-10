@@ -117,6 +117,7 @@ function MaternityChecklist() {
   const [showShoppingForm, setShowShoppingForm] = useState(false);
   const [formData, setFormData] = useState({ name: '', link: '', note: '' });
   const [formLinks, setFormLinks] = useState([{ id: Date.now(), url: '' }]);
+  const [formPrices, setFormPrices] = useState([]);
   const [editingShoppingId, setEditingShoppingId] = useState(null);
   const [editingShoppingName, setEditingShoppingName] = useState('');
   const [deleteShoppingConfirmId, setDeleteShoppingConfirmId] = useState(null);
@@ -690,17 +691,24 @@ function MaternityChecklist() {
   const addShoppingItem = () => {
     if (!formData.name.trim()) return;
     const primaryLink = formLinks.length > 0 ? formLinks[0].url : '';
+    const validPrices = formPrices.filter(p => p.price && p.shop).map(p => ({
+      price: parseInt(p.price),
+      shop: p.shop,
+      date: p.date || new Date().toLocaleDateString('zh-TW'),
+      link: p.link || ''
+    }));
     saveShoppingList([...(shoppingList || []), { 
       id: Date.now().toString(), 
       name: formData.name, 
       purchased: false, 
-      prices: [], 
+      prices: validPrices,
       link: primaryLink,
       note: formData.note,
       links: formLinks.filter(l => l.url.trim())
     }]);
     setFormData({ name: '', link: '', note: '' });
     setFormLinks([{ id: Date.now(), url: '' }]);
+    setFormPrices([]);
     setShowShoppingForm(false);
   };
   const removeShoppingItem = (id) => saveShoppingList(shoppingList.filter(i => i.id !== id));
@@ -1179,7 +1187,7 @@ function MaternityChecklist() {
 
             {showShoppingForm && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div style={{backgroundColor: 'white', borderColor: colors.accent}} className="border-2 rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto">
+                <div style={{backgroundColor: 'white', borderColor: colors.accent}} className="border-2 rounded-lg p-6 w-full max-w-md max-h-screen overflow-y-auto">
                   <h2 style={{color: colors.dark}} className="text-xl font-bold mb-4">新增購物項目</h2>
                   
                   <div className="space-y-3">
@@ -1211,11 +1219,42 @@ function MaternityChecklist() {
                       <label style={{color: colors.text}} className="block text-sm font-semibold mb-1">備註</label>
                       <textarea value={formData.note} onChange={(e) => setFormData({...formData, note: e.target.value})} placeholder="例：要粉紅色、尺寸M..." style={{borderColor: colors.accent, color: colors.text}} className="w-full px-3 py-2 border rounded-lg focus:outline-none text-sm h-20 resize-none" />
                     </div>
+
+                    <div className="pt-2 border-t" style={{borderColor: colors.accent}}>
+                      <label style={{color: colors.text}} className="block text-sm font-semibold mb-2">💰 比價資訊（選填）</label>
+                      <div className="space-y-2">
+                        {formPrices.map((price, idx) => (
+                          <div key={idx} className="space-y-2 p-2 bg-gray-50 rounded-lg">
+                            <div className="flex gap-2">
+                              <input type="number" value={price.price} onChange={(e) => {
+                                const newPrices = [...formPrices];
+                                newPrices[idx].price = e.target.value;
+                                setFormPrices(newPrices);
+                              }} placeholder="價格" style={{borderColor: colors.accent, color: colors.text}} className="w-20 px-2 py-1 border rounded text-sm" />
+                              <input type="text" value={price.shop} onChange={(e) => {
+                                const newPrices = [...formPrices];
+                                newPrices[idx].shop = e.target.value;
+                                setFormPrices(newPrices);
+                              }} placeholder="店鋪" style={{borderColor: colors.accent, color: colors.text}} className="flex-1 px-2 py-1 border rounded text-sm" />
+                              {formPrices.length > 1 && (
+                                <button onClick={() => setFormPrices(formPrices.filter((_, i) => i !== idx))} className="px-2 py-1 bg-red-100 text-red-500 rounded hover:bg-red-200">✕</button>
+                              )}
+                            </div>
+                            <input type="url" value={price.link} onChange={(e) => {
+                              const newPrices = [...formPrices];
+                              newPrices[idx].link = e.target.value;
+                              setFormPrices(newPrices);
+                            }} placeholder="商品連結（選填）" style={{borderColor: colors.accent, color: colors.text}} className="w-full px-2 py-1 border rounded text-sm" />
+                          </div>
+                        ))}
+                        <button onClick={() => setFormPrices([...formPrices, { price: '', shop: '', link: '', date: new Date().toLocaleDateString('zh-TW') }])} style={{color: colors.accent, borderColor: colors.accent}} className="w-full px-3 py-2 border rounded-lg hover:bg-gray-50 text-sm font-semibold">+ 新增比價</button>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex gap-2 mt-4">
                     <button onClick={addShoppingItem} style={{backgroundColor: colors.accent}} className="flex-1 px-4 py-2 text-white rounded-lg hover:opacity-90 font-semibold">新增</button>
-                    <button onClick={() => { setShowShoppingForm(false); setFormData({ name: '', link: '', note: '' }); setFormLinks([{ id: Date.now(), url: '' }]); }} className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold">取消</button>
+                    <button onClick={() => { setShowShoppingForm(false); setFormData({ name: '', link: '', note: '' }); setFormLinks([{ id: Date.now(), url: '' }]); setFormPrices([]); }} className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold">取消</button>
                   </div>
                 </div>
               </div>
@@ -1237,18 +1276,24 @@ function MaternityChecklist() {
                       </button>
                       {editingShoppingId === si.id ? (
                         <div className="flex-1">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 mb-2">
                             <input type="text" value={editingShoppingName} onChange={(e) => setEditingShoppingName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEditShopping(si.id); }} style={{borderColor: colors.accent, color: colors.text}} className="flex-1 px-2 py-1 border rounded text-sm font-semibold focus:outline-none" autoFocus />
                             <button onClick={() => saveEditShopping(si.id)} style={{backgroundColor: colors.accent}} className="px-2 py-1 text-white rounded text-sm">✓</button>
                             <button onClick={() => setEditingShoppingId(null)} className="px-2 py-1 bg-gray-300 rounded text-sm">✕</button>
                           </div>
-                          <input type="url" value={si.link || ''} onChange={(e) => saveShoppingList(shoppingList.map(i => i.id === si.id ? { ...i, link: e.target.value } : i))} placeholder="貼上商品連結 (http://...)" style={{borderColor: colors.accent}} className="w-full px-2 py-1 border rounded text-sm mt-2" />
+                          <input type="url" value={si.link || ''} onChange={(e) => saveShoppingList(shoppingList.map(i => i.id === si.id ? { ...i, link: e.target.value } : i))} placeholder="貼上商品連結 (http://...)" style={{borderColor: colors.accent}} className="w-full px-2 py-1 border rounded text-sm mb-2" />
+                          <textarea value={si.note || ''} onChange={(e) => saveShoppingList(shoppingList.map(i => i.id === si.id ? { ...i, note: e.target.value } : i))} placeholder="備註（例：要粉紅色、尺寸M...）" style={{borderColor: colors.accent}} className="w-full px-2 py-1 border rounded text-sm h-16 resize-none" />
                         </div>
                       ) : (
-                        <div className="flex-1 flex items-center gap-2">
-                          <span style={{color: si.purchased ? '#a0aec0' : colors.text, textDecoration: si.purchased ? 'line-through' : 'none'}} className="font-semibold">{si.name}</span>
-                          {si.link && (
-                            <a href={si.link} target="_blank" rel="noopener noreferrer" style={{color: colors.accent}} className="text-xs hover:opacity-75">🔗</a>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span style={{color: si.purchased ? '#a0aec0' : colors.text, textDecoration: si.purchased ? 'line-through' : 'none'}} className="font-semibold">{si.name}</span>
+                            {si.link && (
+                              <a href={si.link} target="_blank" rel="noopener noreferrer" style={{color: colors.accent}} className="text-xs hover:opacity-75">🔗</a>
+                            )}
+                          </div>
+                          {si.note && (
+                            <div style={{color: colors.dark, fontSize: '12px'}} className="mt-1 text-xs">📝 {si.note}</div>
                           )}
                         </div>
                       )}
