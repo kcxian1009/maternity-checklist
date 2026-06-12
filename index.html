@@ -1015,7 +1015,7 @@ function MaternityChecklist() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#faf8f3" }}>
       {/* Header */}
-      <div className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-gray-200 shadow-sm" style={{paddingTop: 'max(16px, env(safe-area-inset-top))'}}>
         <div className="max-w-3xl mx-auto px-4 py-4">
           <h1 style={{color: colors.dark}} className="text-2xl font-bold mb-2">
             {activeTab === 'delivery' && '待產包清單'}
