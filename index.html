@@ -917,8 +917,8 @@ function MaternityChecklist() {
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <p style={{color: colors.text}} className="font-semibold">{item}</p>
-                {item.link && (
+                <p style={{color: colors.text}} className="font-semibold">{item.name || item}</p>
+                {(item.link || (typeof item === 'string' ? false : false)) && (
                   <a href={item.link} target="_blank" rel="noopener noreferrer" style={{color: colors.accent}} className="text-xs hover:opacity-75">🔗</a>
                 )}
               </div>
@@ -927,7 +927,7 @@ function MaternityChecklist() {
           )}
         </div>
         {editingId !== id && (
-          <button onClick={() => startEdit(id, note, item)} className="p-2 hover:bg-gray-100 rounded-lg" title="編輯名稱備註">
+          <button onClick={() => startEdit(id, note, item.name || item)} className="p-2 hover:bg-gray-100 rounded-lg" title="編輯名稱備註">
             <Edit2 className="w-4 h-4" style={{color: colors.secondary}} />
           </button>
         )}
