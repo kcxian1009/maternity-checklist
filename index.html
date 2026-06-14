@@ -466,7 +466,7 @@ function MaternityChecklist() {
   const getItemId = (section, index, tab) => `${tab || activeTab}-${section}-${index}`;
   const getItemData = (id) => {
     const d = checklist[id];
-    if (!d) return { status: 'pending', note: '', itemName: '', quantity: 0, currentQuantity: 0, prices: [] };
+    if (!d) return { status: 'pending', note: '', itemName: '', quantity: 0, currentQuantity: 0, prices: [], link: '' };
     return { ...d, prices: Array.isArray(d.prices) ? d.prices : [] };
   };
   const setItemData = (id, data) => { setChecklist(prev => ({ ...prev, [id]: { ...getItemData(id), ...data } })); };
@@ -675,7 +675,7 @@ function MaternityChecklist() {
           const fullId = `${tab}-${section}-${index}`;
           const d = getItemData(fullId);
           if (d.status === 'toBuy' && !deletedItems.has(fullId)) {
-            items.push({ id: fullId, section, item: d.itemName || item, note: d.note, tab, quantity: d.quantity || 0, currentQuantity: d.currentQuantity || 0, needQuantity: Math.max(0, (d.quantity || 0) - (d.currentQuantity || 0)), prices: d.prices || [] });
+            items.push({ id: fullId, section, item: { name: d.itemName || item, link: d.link || '' }, note: d.note, tab, quantity: d.quantity || 0, currentQuantity: d.currentQuantity || 0, needQuantity: Math.max(0, (d.quantity || 0) - (d.currentQuantity || 0)), prices: d.prices || [] });
           }
         });
       });
@@ -916,7 +916,12 @@ function MaternityChecklist() {
             </div>
           ) : (
             <>
-              <p style={{color: colors.text}} className="font-semibold">{item}</p>
+              <div className="flex items-center gap-2">
+                <p style={{color: colors.text}} className="font-semibold">{item}</p>
+                {item.link && (
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" style={{color: colors.accent}} className="text-xs hover:opacity-75">🔗</a>
+                )}
+              </div>
               {note && <p style={{color: colors.textMute}} className="text-sm mt-1 italic">💬 {note}</p>}
             </>
           )}
