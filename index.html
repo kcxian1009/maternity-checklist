@@ -481,9 +481,14 @@ function MaternityChecklist() {
     [deliveryData, confinementData].forEach((data, i) => {
       const tab = i === 0 ? 'delivery' : 'confinement';
       Object.entries(data).forEach(([section, items]) => {
+        // 預設品項
         items.forEach((_, index) => {
           const id = `${tab}-${section}-${index}`;
           if ((checklist[id] || {}).status === 'toBuy' && !deletedItems.has(id)) count++;
+        });
+        // 自訂品項
+        Object.entries(checklist).forEach(([id, d]) => {
+          if (id.startsWith(`${tab}-${section}-custom-`) && !deletedItems.has(id) && d.status === 'toBuy') count++;
         });
       });
     });
@@ -672,11 +677,18 @@ function MaternityChecklist() {
     [deliveryData, confinementData].forEach((data, i) => {
       const tab = i === 0 ? 'delivery' : 'confinement';
       Object.entries(data).forEach(([section, itemList]) => {
+        // 預設品項
         itemList.forEach((item, index) => {
           const fullId = `${tab}-${section}-${index}`;
           const d = getItemData(fullId);
           if (d.status === 'toBuy' && !deletedItems.has(fullId)) {
             items.push({ id: fullId, section, item: { name: d.itemName || item, link: d.link || '' }, note: d.note, tab, quantity: d.quantity || 0, currentQuantity: d.currentQuantity || 0, needQuantity: Math.max(0, (d.quantity || 0) - (d.currentQuantity || 0)), prices: d.prices || [] });
+          }
+        });
+        // 自訂新增品項（custom-）
+        Object.entries(checklist).forEach(([id, d]) => {
+          if (id.startsWith(`${tab}-${section}-custom-`) && !deletedItems.has(id) && d.status === 'toBuy') {
+            items.push({ id, section, item: { name: d.itemName || '新品項', link: d.link || '' }, note: d.note, tab, quantity: d.quantity || 0, currentQuantity: d.currentQuantity || 0, needQuantity: Math.max(0, (d.quantity || 0) - (d.currentQuantity || 0)), prices: d.prices || [] });
           }
         });
       });
