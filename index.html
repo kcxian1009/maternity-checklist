@@ -142,6 +142,9 @@ function MaternityChecklist() {
   const [editingCustomItemId, setEditingCustomItemId] = useState(null);
   const [editingCustomItemName, setEditingCustomItemName] = useState('');
   const [expandedCustomSections, setExpandedCustomSections] = useState({});
+  const [customTabName, setCustomTabName] = useState('自訂');
+  const [editingCustomTabName, setEditingCustomTabName] = useState(false);
+  const [tempCustomTabName, setTempCustomTabName] = useState('');
   const fbCustomLoaded = React.useRef(false);
 
   // ✅ 防止 Firebase 讀取後立刻觸發寫入（無限循環保護）
