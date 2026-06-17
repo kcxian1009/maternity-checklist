@@ -130,6 +130,9 @@ function MaternityChecklist() {
   const [deletedItems, setDeletedItems] = useState(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState(null); // {id, name} 待確認刪除的項目
 
+  // ✅ 防止 Firebase 讀取後立刻觸發寫入（無限循環保護）
+  const fbLoaded = React.useRef(false);
+
   // ====== 資料定義 ======
   const deliveryData = {
     '住院證件檢查': ['夫妻雙方身分證', '健保卡', '媽媽手冊'],
@@ -545,6 +548,7 @@ function MaternityChecklist() {
         setChecklist(initialChecklistData);
         checklistRef.set(initialChecklistData);
       }
+      fbLoaded.current = true;
       setIsSyncing(false);
     }, (error) => {
       console.error('Firebase 載入錯誤:', error);
@@ -554,6 +558,7 @@ function MaternityChecklist() {
       } else {
         setChecklist(initialChecklistData);
       }
+      fbLoaded.current = true;
       setIsSyncing(false);
     });
     
@@ -588,6 +593,8 @@ function MaternityChecklist() {
   // 購物清單在上面的 Firebase useEffect 中已載入
 
   useEffect(() => {
+    // ✅ fbLoaded 確保 Firebase 初始讀取完畢才寫入，防止無限循環
+    if (!fbLoaded.current) return;
     if (Object.keys(checklist).length > 0) {
       database.ref(`sessions/${sessionId}/checklist`).set(checklist);
       localStorage.setItem('maternity-checklist', JSON.stringify(checklist));
