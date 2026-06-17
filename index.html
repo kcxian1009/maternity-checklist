@@ -27,7 +27,7 @@
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root"><div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#c9847a;font-size:18px;">載入中...</div></div>
 
     <!-- React -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -43,7 +43,16 @@
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- App -->
+    <script>
+    window.onerror = function(msg, url, line, col, err) {
+      document.getElementById('root').innerHTML = '<div style="padding:20px;background:red;color:white;font-family:monospace;white-space:pre-wrap;font-size:12px"><b>ERROR:</b> ' + msg + '\nLine: ' + line + ', Col: ' + col + '\n\n' + (err && err.stack ? err.stack : '') + '</div>';
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      document.getElementById('root').innerHTML = '<div style="padding:20px;background:orange;color:black;font-family:monospace;white-space:pre-wrap;font-size:12px"><b>PROMISE ERROR:</b> ' + e.reason + '</div>';
+    });
+  </script>
+  <!-- App -->
     <script type="text/babel">
 const { useState, useEffect } = React;
 
@@ -76,16 +85,23 @@ const Upload = ({className='', style={}}) => React.createElement('svg', {xmlns:'
 
 
 // Firebase compat 初始化
-firebase.initializeApp({
-  apiKey: "AIzaSyA85RtRzWWGTg51Ky4SW-0UQaEq5kRJgrQ",
-  authDomain: "maternity-checklist.firebaseapp.com",
-  databaseURL: "https://maternity-checklist-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "maternity-checklist",
-  storageBucket: "maternity-checklist.firebasestorage.app",
-  messagingSenderId: "211617306579",
-  appId: "1:211617306579:web:22646769d744cde25dc126"
-});
-const database = firebase.database();
+let database;
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyA85RtRzWWGTg51Ky4SW-0UQaEq5kRJgrQ",
+    authDomain: "maternity-checklist.firebaseapp.com",
+    databaseURL: "https://maternity-checklist-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "maternity-checklist",
+    storageBucket: "maternity-checklist.firebasestorage.app",
+    messagingSenderId: "211617306579",
+    appId: "1:211617306579:web:22646769d744cde25dc126"
+  });
+  database = firebase.database();
+} catch(e) {
+  console.error("Firebase init error:", e);
+  // Create a mock database object so the app still renders
+  database = { ref: () => ({ on: (evt, cb) => cb({ exists: () => false, val: () => null }), set: () => Promise.resolve(), off: () => {} }) };
+}
 
 function MaternityChecklist() {
   // ===== 浪漫糖果色配色 =====
