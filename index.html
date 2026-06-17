@@ -1138,7 +1138,7 @@ function MaternityChecklist() {
                     })}
                     {/* 渲染用戶自行新增的品項 */}
                     {Object.entries(checklist).filter(([id]) =>
-                      id.startsWith(`${activeTab}-${section}-custom-`) && !deletedItems.has(id)
+                      id.startsWith(activeTab + '-' + section + '-custom-') && !deletedItems.has(id)
                     ).map(([id, d]) => (
                       <div key={id} className="rounded-lg transition-all overflow-hidden">
                         <div style={{backgroundColor: d.status === 'done' ? '#f0c8b7' : d.status === 'have' ? '#f9e8e3' : d.status === 'toBuy' ? '#fffaf0' : '#fff9f7', borderLeft: `4px solid ${d.status === 'done' ? colors.primary : d.status === 'have' ? '#a0aec0' : d.status === 'toBuy' ? colors.secondary : '#e2e8f0'}`}} className="flex items-start gap-3 p-3">
