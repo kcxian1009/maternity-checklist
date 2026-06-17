@@ -37,14 +37,14 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 
-    <!-- Tailwind CSS -->
+    <!-- Babel (釘死版本，避免最新版 breaking change) -->
+    <script src="https://unpkg.com/@babel/standalone@7.23.9/babel.min.js"></script>
+
+    <!-- Tailwind CSS (必須在 Babel 後) -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Babel -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <!-- App -->
-    <script type="text/babel">
+    <script type="text/babel" data-presets="react">
 const { useState, useEffect } = React;
 
 // ===== 自定義 SVG 圖標組件 =====
