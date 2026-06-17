@@ -662,12 +662,19 @@ function MaternityChecklist() {
     });
 
     customListRef.on('value', (snapshot) => {
-      if (snapshot.exists() && Array.isArray(snapshot.val())) {
-        const val = snapshot.val();
-        setCustomList(val);
+      if (snapshot.exists()) {
+        const raw = snapshot.val();
+        // Firebase 會把陣列轉成 {0:..., 1:...} 物件，需要轉回陣列
+        const val = Array.isArray(raw) ? raw : Object.values(raw || {});
+        // 確保每個 category 的 items 也是陣列
+        const normalized = val.map(cat => ({
+          ...cat,
+          items: Array.isArray(cat.items) ? cat.items : Object.values(cat.items || {})
+        }));
+        setCustomList(normalized);
         const expanded = {};
-        val.forEach(cat => { expanded[cat.id] = true; });
-        setExpandedCustomSections(expanded);
+        normalized.forEach(cat => { expanded[cat.id] = true; });
+        setExpandedCustomSections(prev => ({ ...expanded, ...prev }));
       } else {
         setCustomList([]);
       }
@@ -704,10 +711,19 @@ function MaternityChecklist() {
     }
   }, [checklist, sessionId]);
 
-  // 寫入 customList
+  // 寫入 customList（確保陣列格式，Firebase 需要純陣列）
   useEffect(() => {
     if (!fbCustomLoaded.current) return;
-    database.ref(`sessions/${sessionId}/customList`).set(customList);
+    if (customList.length === 0) {
+      database.ref(`sessions/${sessionId}/customList`).set([]);
+      return;
+    }
+    // 確保每個 category.items 都是純陣列
+    const toSave = customList.map(cat => ({
+      ...cat,
+      items: Array.isArray(cat.items) ? cat.items : Object.values(cat.items || {})
+    }));
+    database.ref(`sessions/${sessionId}/customList`).set(toSave);
   }, [customList, sessionId]);
 
   // 寫入 customChecklist
@@ -1241,16 +1257,16 @@ function MaternityChecklist() {
                     }}
                     maxLength={6}
                     autoFocus
-                    style={{borderColor: '#7c6d8a', fontSize:'14px'}}
+                    style={{borderColor: '#4a7fa5', fontSize:'14px'}}
                     className="flex-1 px-2 py-1 border-2 rounded-lg focus:outline-none text-center font-semibold"
                   />
-                  <button onClick={() => { const n = tempCustomTabName.trim(); if (n) setCustomTabName(n); setEditingCustomTabName(false); }} style={{backgroundColor:'#7c6d8a'}} className="px-2 py-1 text-white rounded-lg text-xs">✓</button>
+                  <button onClick={() => { const n = tempCustomTabName.trim(); if (n) setCustomTabName(n); setEditingCustomTabName(false); }} style={{backgroundColor:'#4a7fa5'}} className="px-2 py-1 text-white rounded-lg text-xs">✓</button>
                 </div>
               ) : (
                 <button
                   onClick={() => (window.scrollTo(0, 0), setActiveTab('custom'))}
                   onDoubleClick={() => { setTempCustomTabName(customTabName); setEditingCustomTabName(true); }}
-                  style={{backgroundColor: activeTab === 'custom' ? '#7c6d8a' : 'white', color: activeTab === 'custom' ? 'white' : colors.text, borderBottom: activeTab === 'custom' ? 'none' : '2px solid #7c6d8a', width: '100%'}}
+                  style={{backgroundColor: activeTab === 'custom' ? '#4a7fa5' : 'white', color: activeTab === 'custom' ? 'white' : colors.text, borderBottom: activeTab === 'custom' ? 'none' : '2px solid #4a7fa5', width: '100%'}}
                   className="py-2 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-1"
                   title="雙擊可編輯名稱"
                 >
@@ -1565,12 +1581,12 @@ function MaternityChecklist() {
         ) : activeTab === 'custom' ? (
           <div className="space-y-4">
             {/* 使用提示 */}
-            <div style={{backgroundColor: '#ede9f5', borderColor: '#7c6d8a', color: colors.text}} className="mb-4 p-3 border rounded-lg text-sm">
+            <div style={{backgroundColor: '#e8f4fb', borderColor: '#4a7fa5', color: colors.text}} className="mb-4 p-3 border rounded-lg text-sm">
               💡 <span className="font-semibold">使用提示：</span>點擊圓圈循環切換狀態<br/>⭕ 未準備 → 📦 已有 → 🛒 待買 → ✅ 已準備<br/>✏️ 雙擊下方 Tab 按鈕可修改清單名稱
             </div>
 
             {/* 新增分類按鈕 */}
-            <div style={{backgroundColor: 'white', borderColor: '#7c6d8a'}} className="border-2 rounded-lg p-4">
+            <div style={{backgroundColor: 'white', borderColor: '#4a7fa5'}} className="border-2 rounded-lg p-4">
               {addingCustomCategory ? (
                 <div className="flex gap-2">
                   <input
@@ -1580,14 +1596,14 @@ function MaternityChecklist() {
                     onKeyDown={(e) => { if (e.key === 'Enter') addCustomCategory(); if (e.key === 'Escape') { setAddingCustomCategory(false); setNewCustomCategoryName(''); }}}
                     placeholder="輸入分類名稱..."
                     autoFocus
-                    style={{borderColor: '#7c6d8a'}}
+                    style={{borderColor: '#4a7fa5'}}
                     className="flex-1 px-3 py-2 border rounded-lg focus:outline-none text-sm"
                   />
-                  <button onClick={addCustomCategory} style={{backgroundColor: '#7c6d8a'}} className="px-4 py-2 text-white rounded-lg font-semibold text-sm">新增</button>
+                  <button onClick={addCustomCategory} style={{backgroundColor: '#4a7fa5'}} className="px-4 py-2 text-white rounded-lg font-semibold text-sm">新增</button>
                   <button onClick={() => { setAddingCustomCategory(false); setNewCustomCategoryName(''); }} className="px-3 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm">取消</button>
                 </div>
               ) : (
-                <button onClick={() => setAddingCustomCategory(true)} style={{backgroundColor: '#7c6d8a', width: '100%'}} className="px-4 py-3 text-white rounded-lg hover:opacity-90 font-semibold text-lg">+ 新增分類</button>
+                <button onClick={() => setAddingCustomCategory(true)} style={{backgroundColor: '#4a7fa5', width: '100%'}} className="px-4 py-3 text-white rounded-lg hover:opacity-90 font-semibold text-lg">+ 新增分類</button>
               )}
             </div>
 
@@ -1605,7 +1621,7 @@ function MaternityChecklist() {
                 return (
                   <div key={cat.id} className="mb-4">
                     {/* 分類標題 */}
-                    <div style={{backgroundColor: 'white', borderColor: '#7c6d8a'}} className="w-full flex items-center justify-between p-4 rounded-lg border shadow-sm">
+                    <div style={{backgroundColor: 'white', borderColor: '#4a7fa5'}} className="w-full flex items-center justify-between p-4 rounded-lg border shadow-sm">
                       {editingCustomCategoryId === cat.id ? (
                         <div className="flex gap-2 flex-1">
                           <input
@@ -1614,21 +1630,21 @@ function MaternityChecklist() {
                             onChange={(e) => setEditingCustomCategoryName(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') saveCustomCategoryName(cat.id); if (e.key === 'Escape') setEditingCustomCategoryId(null); }}
                             autoFocus
-                            style={{borderColor: '#7c6d8a'}}
+                            style={{borderColor: '#4a7fa5'}}
                             className="flex-1 px-2 py-1 border rounded text-sm focus:outline-none"
                           />
-                          <button onClick={() => saveCustomCategoryName(cat.id)} style={{backgroundColor: '#7c6d8a'}} className="px-3 py-1 text-white rounded text-sm">✓</button>
+                          <button onClick={() => saveCustomCategoryName(cat.id)} style={{backgroundColor: '#4a7fa5'}} className="px-3 py-1 text-white rounded text-sm">✓</button>
                           <button onClick={() => setEditingCustomCategoryId(null)} className="px-3 py-1 bg-gray-200 rounded text-sm">✕</button>
                         </div>
                       ) : (
                         <>
                           <button onClick={() => toggleCustomSection(cat.id)} className="flex-1 flex items-center gap-2 text-left">
-                            <h2 style={{color: '#4a3f5c'}} className="text-lg font-bold">{cat.name}</h2>
-                            <span style={{color: '#7c6d8a'}} className="text-sm font-semibold">{doneCount}/{catItems.length}</span>
+                            <h2 style={{color: '#2c5f7a'}} className="text-lg font-bold">{cat.name}</h2>
+                            <span style={{color: '#4a7fa5'}} className="text-sm font-semibold">{doneCount}/{catItems.length}</span>
                             <span className="ml-auto">{isExpanded ? '▲' : '▼'}</span>
                           </button>
                           <button onClick={() => { setEditingCustomCategoryId(cat.id); setEditingCustomCategoryName(cat.name); }} className="p-2 hover:bg-gray-100 rounded-lg ml-2" title="編輯分類名稱">
-                            <Edit2 className="w-4 h-4" style={{color: '#7c6d8a'}} />
+                            <Edit2 className="w-4 h-4" style={{color: '#4a7fa5'}} />
                           </button>
                           <button onClick={() => setDeleteConfirm({ id: cat.id, name: cat.name, type: 'customCategory' })} className="p-2 hover:bg-red-100 rounded-lg" title="刪除分類">
                             <X className="w-4 h-4 text-red-400" />
@@ -1662,10 +1678,10 @@ function MaternityChecklist() {
                                     onChange={(e) => setEditingCustomItemName(e.target.value)}
                                     onKeyDown={(e) => { if (e.key === 'Enter') saveCustomItemName(cat.id, item.id); if (e.key === 'Escape') setEditingCustomItemId(null); }}
                                     autoFocus
-                                    style={{borderColor: '#7c6d8a'}}
+                                    style={{borderColor: '#4a7fa5'}}
                                     className="flex-1 px-2 py-1 border rounded text-sm focus:outline-none"
                                   />
-                                  <button onClick={() => saveCustomItemName(cat.id, item.id)} style={{backgroundColor: '#7c6d8a'}} className="px-2 py-1 text-white rounded text-xs">✓</button>
+                                  <button onClick={() => saveCustomItemName(cat.id, item.id)} style={{backgroundColor: '#4a7fa5'}} className="px-2 py-1 text-white rounded text-xs">✓</button>
                                   <button onClick={() => setEditingCustomItemId(null)} className="px-2 py-1 bg-gray-200 rounded text-xs">✕</button>
                                 </div>
                               ) : (
@@ -1676,7 +1692,7 @@ function MaternityChecklist() {
                               {editingCustomItemId !== item.id && (
                                 <>
                                   <button onClick={() => { setEditingCustomItemId(item.id); setEditingCustomItemName(item.name); }} className="p-2 hover:bg-gray-100 rounded-lg flex-shrink-0">
-                                    <Edit2 className="w-4 h-4" style={{color: '#7c6d8a'}} />
+                                    <Edit2 className="w-4 h-4" style={{color: '#4a7fa5'}} />
                                   </button>
                                   <button onClick={() => setDeleteConfirm({ id: item.id, name: item.name, type: 'customItem', catId: cat.id })} className="p-2 hover:bg-red-100 rounded-lg flex-shrink-0">
                                     <X className="w-4 h-4 text-red-400" />
@@ -1698,14 +1714,14 @@ function MaternityChecklist() {
                                 onKeyDown={(e) => { if (e.key === 'Enter') addCustomItem(cat.id); if (e.key === 'Escape') { setAddingCustomItem(null); setNewCustomItemName(''); }}}
                                 placeholder="輸入項目名稱..."
                                 autoFocus
-                                style={{borderColor: '#7c6d8a'}}
+                                style={{borderColor: '#4a7fa5'}}
                                 className="flex-1 px-3 py-2 border rounded-lg focus:outline-none text-sm"
                               />
-                              <button onClick={() => addCustomItem(cat.id)} style={{backgroundColor: '#7c6d8a'}} className="px-3 py-2 text-white rounded-lg text-sm font-semibold">新增</button>
+                              <button onClick={() => addCustomItem(cat.id)} style={{backgroundColor: '#4a7fa5'}} className="px-3 py-2 text-white rounded-lg text-sm font-semibold">新增</button>
                               <button onClick={() => { setAddingCustomItem(null); setNewCustomItemName(''); }} className="px-3 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm">取消</button>
                             </div>
                           ) : (
-                            <button onClick={() => { setAddingCustomItem(cat.id); setNewCustomItemName(''); }} style={{color: '#7c6d8a', borderColor: '#7c6d8a'}} className="w-full py-2 border border-dashed rounded-lg text-sm font-semibold hover:bg-purple-50">
+                            <button onClick={() => { setAddingCustomItem(cat.id); setNewCustomItemName(''); }} style={{color: '#4a7fa5', borderColor: '#4a7fa5'}} className="w-full py-2 border border-dashed rounded-lg text-sm font-semibold hover:bg-blue-50">
                               + 新增項目
                             </button>
                           )}
